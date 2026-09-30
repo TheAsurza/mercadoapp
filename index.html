@@ -1,0 +1,3463 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Lista de Mercado Inteligente (Hogar)</title>
+
+  <!-- PWA & Android Meta Tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#059669">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mercado">
+  
+  <!-- Favicon / Touch Icon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%23059669'/%3E%3Cpath fill='%23ffffff' d='M128 176v-32c0-70.7 57.3-128 128-128s128 57.3 128 128v32h32c17.7 0 32 14.3 32 32v240c0 35.3-28.7 64-64 64H128c-35.3 0-64-28.7-64-64V208c0-17.7 14.3-32 32-32h32zm64-32v32h128v-32c0-35.3-28.7-64-64-64s-64 28.7-64 64zm-32 144c0 17.7 14.3 32 32 32s32-14.3 32-32v-16h-64v16zm128 0c0 17.7 14.3 32 32 32s32-14.3 32-32v-16h-64v16z'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%23059669'/%3E%3Cpath fill='%23ffffff' d='M128 176v-32c0-70.7 57.3-128 128-128s128 57.3 128 128v32h32c17.7 0 32 14.3 32 32v240c0 35.3-28.7 64-64 64H128c-35.3 0-64-28.7-64-64V208c0-17.7 14.3-32 32-32h32zm64-32v32h128v-32c0-35.3-28.7-64-64-64s-64 28.7-64 64zm-32 144c0 17.7 14.3 32 32 32s32-14.3 32-32v-16h-64v16zm128 0c0 17.7 14.3 32 32 32s32-14.3 32-32v-16h-64v16z'/%3E%3C/svg%3E">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Chart.js for Price Trends -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 1.25rem); }
+    .pt-safe { padding-top: env(safe-area-inset-top, 0.75rem); }
+    .strikethrough-transition { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+  </style>
+</head>
+
+<body class="h-full text-slate-800 antialiased flex flex-col select-none overflow-hidden bg-slate-100">
+
+  <!-- BANNER PROMPT DE INSTALACIÓN ANDROID PWA (Aparece si la app no está instalada aún) -->
+  <aside id="pwaInstallBanner" class="hidden bg-slate-900 text-white px-4 py-2 text-xs flex items-center justify-between shrink-0 z-30 shadow-md">
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-6 rounded-lg bg-brand-600 flex items-center justify-center text-white text-[11px]">
+        <i class="fa-solid fa-basket-shopping"></i>
+      </div>
+      <div>
+        <span class="font-bold block leading-tight">Instalar en tu Android</span>
+        <span class="text-[10px] text-slate-400">Úsala a pantalla completa con su ícono</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <button type="button" onclick="triggerPWAInstall()" class="px-2.5 py-1 bg-brand-500 hover:bg-brand-600 rounded-lg font-bold text-[11px] transition">
+        Instalar
+      </button>
+      <button type="button" onclick="dismissPWAInstallBanner()" class="text-slate-400 hover:text-white p-1">
+        <i class="fa-solid fa-xmark text-xs"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- TOP APP BAR -->
+  <header class="bg-white border-b border-slate-200 shadow-sm shrink-0 z-20 pt-safe">
+    <div class="max-w-md mx-auto px-4 py-2 flex items-center justify-between">
+      
+      <!-- List Selector Title -->
+      <button 
+        type="button" 
+        onclick="openListsModal()" 
+        class="flex items-center gap-2 text-left group hover:opacity-85 transition">
+        <div class="w-9 h-9 rounded-xl bg-brand-50 border border-brand-200 flex items-center justify-center text-brand-600 shadow-sm">
+          <i class="fa-solid fa-basket-shopping text-sm"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 id="topListTitle" class="text-sm font-extrabold text-slate-900 leading-tight truncate max-w-[130px]">
+              Cargando...
+            </h1>
+            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-brand-600 transition"></i>
+          </div>
+          <span id="topListDate" class="text-[11px] font-medium text-slate-500 block">Hoy</span>
+        </div>
+      </button>
+
+      <!-- Member Selector + Actions -->
+      <div class="flex items-center gap-1.5">
+        
+        <!-- Active Member Quick Switch Button -->
+        <button 
+          type="button" 
+          onclick="openProfileModal()"
+          title="Cambiar quién está usando la app"
+          class="h-8 px-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center gap-1.5 transition text-xs">
+          <span id="currentMemberAvatar" class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[10px]">
+            É
+          </span>
+          <span id="currentMemberName" class="font-bold text-[11px] text-slate-700 max-w-[65px] truncate">
+            Él
+          </span>
+        </button>
+
+        <!-- Change Date of Current List -->
+        <button 
+          type="button"
+          onclick="openChangeDateModal()" 
+          title="Cambiar fecha de compra"
+          class="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center text-xs transition">
+          <i class="fa-regular fa-calendar-days"></i>
+        </button>
+
+        <!-- Reports & Statistics -->
+        <button 
+          type="button"
+          onclick="openReportsModal()" 
+          title="Reportes y gastos por persona"
+          class="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center text-xs transition">
+          <i class="fa-solid fa-chart-pie"></i>
+        </button>
+
+        <!-- Price History Engine -->
+        <button 
+          type="button"
+          onclick="openPriceHistoryModal()" 
+          title="Histórico de precios"
+          class="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center text-xs transition">
+          <i class="fa-solid fa-arrow-trend-up"></i>
+        </button>
+
+        <!-- Cloud Sync Status Button -->
+        <button 
+          id="cloudStatusBtn"
+          type="button"
+          onclick="openCloudModal()" 
+          title="Estado de sincronización en la nube"
+          class="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-xs transition">
+          <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- SUMMARY & PROGRESS BAR -->
+  <section class="bg-white border-b border-slate-200/80 px-4 py-2.5 shrink-0 z-10">
+    <div class="max-w-md mx-auto">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-baseline gap-1.5">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total gastado:</span>
+          <span id="headerTotalSpent" class="text-lg font-black text-brand-700 tracking-tight">S/ 0.00</span>
+        </div>
+        <div class="text-right">
+          <span id="headerProgressCount" class="text-xs font-bold text-slate-700">0 / 0</span>
+          <span class="text-[10px] text-slate-400 font-medium">comprados</span>
+        </div>
+      </div>
+
+      <!-- Animated Progress Bar -->
+      <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200/60 relative">
+        <div 
+          id="headerProgressBar" 
+          class="h-full bg-brand-500 transition-all duration-300 rounded-full" 
+          style="width: 0%">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEARCH, CATEGORIES & AUTHOR FILTER -->
+  <section class="bg-white border-b border-slate-200/60 px-4 py-2 shrink-0">
+    <div class="max-w-md mx-auto space-y-2">
+      <div class="relative">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+        <input 
+          type="text" 
+          id="searchInput" 
+          oninput="onSearchChange(event)"
+          placeholder="Buscar producto o ingrediente..." 
+          class="w-full pl-8 pr-8 py-1.5 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition">
+        <button 
+          id="clearSearchBtn"
+          onclick="clearSearch()" 
+          class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-xs">
+          <i class="fa-solid fa-circle-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div id="categoryFilterContainer" class="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar text-xs">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN SCROLLABLE LIST OF ITEMS -->
+  <main class="flex-1 overflow-y-auto px-4 py-3 bg-slate-50/50">
+    <div class="max-w-md mx-auto space-y-4" id="categoriesListRoot">
+      <!-- Dynamic list grouped by categories rendered by JS -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyStateBox" class="hidden max-w-md mx-auto py-12 text-center">
+      <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 shadow-sm">
+        <i class="fa-solid fa-clipboard-check text-xl"></i>
+      </div>
+      <p class="text-sm font-bold text-slate-700">No hay productos en esta vista</p>
+      <p class="text-xs text-slate-400 mt-1 max-w-[220px] mx-auto">Agrega nuevos productos o limpia el filtro de búsqueda.</p>
+      <button 
+        type="button" 
+        onclick="restoreDefaultSeedData()" 
+        class="mt-3 px-3 py-1.5 rounded-xl bg-brand-50 border border-brand-200 text-brand-700 font-bold text-xs hover:bg-brand-100 transition inline-flex items-center gap-1.5">
+        <i class="fa-solid fa-rotate-left"></i> Cargar Lista Original del Cuaderno
+      </button>
+    </div>
+  </main>
+
+  <!-- BOTTOM FIXED CONTROLS -->
+  <footer class="bg-white border-t border-slate-200 shadow-lg shrink-0 px-4 py-2.5 pb-safe z-20">
+    <div class="max-w-md mx-auto flex items-center gap-2">
+      <button 
+        type="button" 
+        onclick="openAddItemModal()" 
+        class="flex-1 py-2.5 px-3 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+        <i class="fa-solid fa-plus text-xs"></i>
+        <span>Agregar</span>
+      </button>
+
+      <!-- Botón de Escaneo con IA (Fotos / Capturas / Boletas) -->
+      <button 
+        type="button" 
+        onclick="openScanModal()" 
+        title="Escanear lista o boleta"
+        class="py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-[0.98]">
+        <i class="fa-solid fa-camera text-emerald-600 text-xs"></i>
+        <span>Escanear</span>
+      </button>
+
+      <button 
+        type="button" 
+        onclick="sharePendingListWhatsApp()" 
+        title="Compartir por WhatsApp"
+        class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 flex items-center justify-center text-sm transition">
+        <i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i>
+      </button>
+
+      <button 
+        type="button" 
+        onclick="openListsModal()" 
+        title="Gestionar mis listas"
+        class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center text-sm transition">
+        <i class="fa-solid fa-list-check"></i>
+      </button>
+    </div>
+  </footer>
+
+  <!-- MODAL: ESCANEAR LISTAS Y BOLETAS (IA VISION) -->
+  <div id="scanModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-brand-600"></i> Escanear con IA
+          </h3>
+          <span class="text-[11px] text-slate-500" id="scanModalSubtitle">Transcribe fotos de cuadernos o boletas de supermercado</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button 
+            type="button" 
+            onclick="openAISettingsModal()" 
+            title="Configurar Clave / Modo de IA" 
+            class="text-slate-400 hover:text-brand-600 p-1 transition">
+            <i class="fa-solid fa-sliders text-sm"></i>
+          </button>
+          <button type="button" onclick="closeScanModal()" class="text-slate-400 hover:text-slate-600 p-1">
+            <i class="fa-solid fa-xmark text-base"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Selector de Tipo de Documento: Lista vs Boleta -->
+      <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-2xl text-xs">
+        <button 
+          type="button" 
+          id="scanTabListBtn"
+          onclick="setScanType('list')" 
+          class="py-2 px-3 rounded-xl font-bold transition flex items-center justify-center gap-1.5 bg-white text-slate-800 shadow-xs">
+          <i class="fa-solid fa-clipboard-list text-brand-600"></i>
+          <span>Lista / Cuaderno</span>
+        </button>
+        <button 
+          type="button" 
+          id="scanTabReceiptBtn"
+          onclick="setScanType('receipt')" 
+          class="py-2 px-3 rounded-xl font-bold transition flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-800">
+          <i class="fa-solid fa-receipt text-amber-600"></i>
+          <span>Boleta / Ticket</span>
+        </button>
+      </div>
+
+      <!-- Indicador de Clave / Configuración Activa -->
+      <div id="aiKeyStatusBanner" class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+        <span class="text-slate-600 font-medium flex items-center gap-1.5" id="aiStatusLabel">
+          <i class="fa-solid fa-circle-check text-emerald-500"></i>
+          <span>Modo: Clave Privada</span>
+        </span>
+        <button 
+          type="button" 
+          onclick="openAISettingsModal()" 
+          class="text-[11px] font-bold text-brand-600 hover:text-brand-700 underline">
+          Ajustes
+        </button>
+      </div>
+
+      <!-- Input invisible para archivo / cámara -->
+      <input type="file" id="scanFileInput" accept="image/*" class="hidden" onchange="handleImageSelected(event)">
+
+      <!-- PASO 1: Selector / Capturador de imagen -->
+      <div id="scanUploadStep" class="space-y-3">
+        <div class="border-2 border-dashed border-slate-200 hover:border-brand-500 bg-slate-50/50 hover:bg-brand-50/20 rounded-2xl p-6 text-center transition cursor-pointer" onclick="triggerFileSelect()">
+          <div class="w-12 h-12 mx-auto mb-2 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-brand-600 text-xl">
+            <i id="scanUploadIcon" class="fa-solid fa-camera"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-800 block" id="scanUploadHeading">Sube una foto de tu lista o boleta</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5" id="scanUploadSubheading">Notas manuscritas, capturas de WhatsApp o tickets de caja</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button 
+            type="button" 
+            onclick="triggerCameraCapture()"
+            class="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition">
+            <i class="fa-solid fa-camera"></i> Tomar Foto
+          </button>
+          <button 
+            type="button" 
+            onclick="triggerFileSelect()"
+            class="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition">
+            <i class="fa-solid fa-images"></i> De la Galería
+          </button>
+        </div>
+      </div>
+
+      <!-- PASO 2: Procesamiento y análisis con IA -->
+      <div id="scanLoadingStep" class="hidden py-8 text-center space-y-3">
+        <div class="relative w-16 h-16 mx-auto">
+          <div class="w-16 h-16 rounded-2xl border-4 border-brand-200 border-t-brand-600 animate-spin"></div>
+          <div class="absolute inset-0 flex items-center justify-center text-brand-600">
+            <i class="fa-solid fa-brain text-lg animate-pulse"></i>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-xs font-extrabold text-slate-800" id="scanLoadingTitle">Analizando documento...</h4>
+          <p class="text-[11px] text-slate-400 mt-1" id="scanLoadingDesc">Extrayendo productos, cantidades y clasificando ingredientes</p>
+        </div>
+        <div id="scanImageThumbnailContainer" class="w-24 h-24 mx-auto rounded-xl overflow-hidden border border-slate-200 shadow-inner">
+          <img id="scanImageThumbnail" src="" class="w-full h-full object-cover" alt="Miniatura">
+        </div>
+      </div>
+
+      <!-- PASO 3: Revisión Previa y Destino -->
+      <div id="scanReviewStep" class="hidden space-y-3">
+        <!-- Resumen de Boleta detectada (Solo visible en modo Boleta) -->
+        <div id="receiptSummaryCard" class="hidden p-3 rounded-2xl bg-amber-50/80 border border-amber-200 text-xs space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-extrabold text-amber-900 flex items-center gap-1.5">
+              <i class="fa-solid fa-receipt text-amber-600"></i>
+              <span id="receiptStoreBadge">Supermercado</span>
+            </span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900" id="receiptDateBadge">
+              Hoy
+            </span>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-amber-800 pt-1 border-t border-amber-200/60">
+            <span>Total en Boleta: <strong id="receiptPrintedTotal" class="text-xs font-black">S/ 0.00</strong></span>
+            <span>Suma de Ítems: <strong id="receiptCalculatedTotal" class="text-xs font-black text-brand-700">S/ 0.00</strong></span>
+          </div>
+        </div>
+
+        <!-- Selector de Destino -->
+        <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+          <span class="text-[11px] font-bold text-slate-700 block uppercase tracking-wider">¿A dónde agregar estos productos?</span>
+          
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <label class="flex items-center gap-2 p-2 rounded-xl border bg-white cursor-pointer transition has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50/50">
+              <input type="radio" name="scanDestination" value="new" checked onchange="toggleScanDestinationUI()" class="text-brand-600">
+              <span class="font-bold text-slate-800" id="scanDestNewOptionLabel">Nueva Lista</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-xl border bg-white cursor-pointer transition has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50/50">
+              <input type="radio" name="scanDestination" value="append" onchange="toggleScanDestinationUI()" class="text-brand-600">
+              <span class="font-bold text-slate-800">Conciliar con Existente</span>
+            </label>
+          </div>
+
+          <!-- Campos si es Nueva Lista -->
+          <div id="scanNewListFields" class="grid grid-cols-2 gap-2 pt-1">
+            <div>
+              <label class="text-[10px] text-slate-400 font-bold block mb-0.5">Título de la lista</label>
+              <input type="text" id="scanNewListTitle" value="Mercado Escaneado" class="w-full px-2 py-1.5 text-xs rounded-lg border bg-white font-semibold">
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-400 font-bold block mb-0.5">Fecha de compra</label>
+              <input type="date" id="scanNewListDate" class="w-full px-2 py-1.5 text-xs rounded-lg border bg-white font-bold">
+            </div>
+          </div>
+
+          <!-- Selector si es Anexar / Conciliar a Existente -->
+          <div id="scanAppendFields" class="hidden pt-1 space-y-1">
+            <label class="text-[10px] text-slate-400 font-bold block">Seleccionar lista de compras a actualizar:</label>
+            <select id="scanTargetListSelect" class="w-full px-2.5 py-1.5 text-xs rounded-lg border bg-white font-semibold"></select>
+            <span class="text-[10px] text-slate-400 block" id="scanAppendHint">Si coincide un producto pendiente, le asignará el precio de la boleta y lo tachará automáticamente.</span>
+          </div>
+
+          <!-- Selector de quién realizó la compra -->
+          <div class="pt-1 flex items-center justify-between border-t border-slate-200/80 text-xs">
+            <span class="text-slate-600 font-bold text-[11px]">Compra registrada por:</span>
+            <div class="flex gap-1.5" id="scanBuyerPills">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Encabezado de Productos Detectados -->
+        <div class="flex items-center justify-between px-1">
+          <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-list-check text-brand-600"></i>
+            Productos detectados (<span id="scannedItemsCount">0</span>)
+          </span>
+          <button type="button" onclick="toggleSelectAllScanned()" class="text-[11px] text-brand-600 hover:text-brand-700 font-bold">
+            Alternar selección
+          </button>
+        </div>
+
+        <!-- Lista editable de productos detectados -->
+        <div id="scannedItemsListContainer" class="max-h-64 overflow-y-auto space-y-1.5 divide-y divide-slate-100 pr-0.5">
+          <!-- Items renderizados dinámicamente -->
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="pt-2 flex gap-2">
+          <button 
+            type="button" 
+            onclick="resetScanModal()" 
+            class="py-2.5 px-3 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition">
+            Volver a escanear
+          </button>
+          <button 
+            type="button" 
+            id="applyScannedBtn"
+            onclick="applyScannedItemsToApp()" 
+            class="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-check"></i>
+            <span>Confirmar y Guardar Productos</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PERFIL / INTEGRANTES DEL HOGAR -->
+  <div id="profileModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center p-4">
+    <div class="w-full max-w-xs bg-white rounded-2xl shadow-2xl p-5 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-user-group text-brand-600"></i> ¿Quién está usando la app?
+        </h3>
+        <button type="button" onclick="closeProfileModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-500">
+        Selecciona tu perfil para que tus compras y productos agregados queden registrados a tu nombre.
+      </p>
+
+      <div class="grid grid-cols-2 gap-2" id="memberButtonsContainer"></div>
+
+      <details class="text-xs border border-slate-200 rounded-xl p-2 bg-slate-50">
+        <summary class="font-bold text-slate-600 cursor-pointer">Personalizar nombres de la pareja</summary>
+        <div class="space-y-2 pt-2">
+          <div>
+            <label class="text-[10px] text-slate-500 font-bold block">Esposo / Integrante 1</label>
+            <input type="text" id="partner1Input" class="w-full px-2 py-1 text-xs border rounded bg-white font-semibold">
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-500 font-bold block">Esposa / Integrante 2</label>
+            <input type="text" id="partner2Input" class="w-full px-2 py-1 text-xs border rounded bg-white font-semibold">
+          </div>
+          <button type="button" onclick="saveCustomPartners()" class="w-full py-1.5 bg-slate-800 text-white font-bold rounded-lg text-xs">
+            Guardar Nombres
+          </button>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- MODAL: AGREGAR PRODUCTO -->
+  <div id="addItemModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-cart-plus text-brand-600"></i> Nuevo Producto
+        </h3>
+        <button type="button" onclick="closeAddItemModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <form id="addItemForm" onsubmit="handleAddItemSubmit(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nombre del producto *</label>
+          <input 
+            type="text" 
+            id="newItemName" 
+            required 
+            placeholder="Ej: Tomate, Pechuga de pollo, Zanahoria"
+            class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Cantidad *</label>
+            <input 
+              type="number" 
+              step="any"
+              min="0.01" 
+              id="newItemQuantityNum" 
+              value="1" 
+              required
+              class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Unidad *</label>
+            <select 
+              id="newItemUnit" 
+              class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-brand-500">
+              <option value="kg">kg (Kilos)</option>
+              <option value="gr">gr (Gramos)</option>
+              <option value="unid" selected>unid (Unidades)</option>
+              <option value="lt">lt (Litros)</option>
+              <option value="ml">ml (Mililitros)</option>
+              <option value="atado">atado (Atados)</option>
+              <option value="frasco">frasco (Frascos)</option>
+              <option value="lata">lata (Latas)</option>
+              <option value="paquete">paquete (Paquetes)</option>
+              <option value="sobre">sobre (Sobres)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex gap-1.5 flex-wrap">
+          <span class="text-[10px] text-slate-400 self-center">Rápidos:</span>
+          <button type="button" onclick="setNewItemFraction(0.25, 'kg')" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-semibold">1/4 kg</button>
+          <button type="button" onclick="setNewItemFraction(0.5, 'kg')" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-semibold">1/2 kg</button>
+          <button type="button" onclick="setNewItemFraction(1, 'kg')" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-semibold">1 kg</button>
+          <button type="button" onclick="setNewItemFraction(2, 'kg')" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-semibold">2 kg</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Categoría</label>
+            <select 
+              id="newItemCategory" 
+              class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none">
+              <option value="Carnes y Aves">Carnes y Aves</option>
+              <option value="Verduras y Tubérculos" selected>Verduras y Tubérculos</option>
+              <option value="Frutas">Frutas</option>
+              <option value="Especias y Condimentos">Especias y Condimentos</option>
+              <option value="Abarrotes y Despensa">Abarrotes y Despensa</option>
+              <option value="Hogar y Limpieza">Hogar y Limpieza</option>
+              <option value="Lácteos y Huevos">Lácteos y Huevos</option>
+              <option value="Otros">Otros</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Precio est. (S/)</label>
+            <input 
+              type="number" 
+              step="0.10" 
+              min="0" 
+              id="newItemPrice" 
+              placeholder="Opcional"
+              class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+          <span class="text-slate-600 font-semibold">Agregado por:</span>
+          <span id="newItemAuthorBadge" class="font-extrabold text-brand-700"></span>
+        </div>
+
+        <div class="pt-2 flex gap-2">
+          <button 
+            type="button" 
+            onclick="closeAddItemModal()" 
+            class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition">
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-sm transition">
+            Guardar Producto
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR PRODUCTO -->
+  <div id="editItemModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-pen text-brand-600"></i> Editar Producto
+        </h3>
+        <button type="button" onclick="closeEditItemModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <form id="editItemForm" onsubmit="handleEditItemSubmit(event)" class="space-y-3">
+        <input type="hidden" id="editItemId">
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nombre</label>
+          <input 
+            type="text" 
+            id="editItemName" 
+            required 
+            class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-brand-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Cantidad</label>
+            <input 
+              type="number" 
+              step="any" 
+              min="0.01" 
+              id="editItemQuantityNum" 
+              required
+              class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Unidad</label>
+            <select 
+              id="editItemUnit" 
+              class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none">
+              <option value="kg">kg (Kilos)</option>
+              <option value="gr">gr (Gramos)</option>
+              <option value="unid">unid (Unidades)</option>
+              <option value="lt">lt (Litros)</option>
+              <option value="ml">ml (Mililitros)</option>
+              <option value="atado">atado (Atados)</option>
+              <option value="frasco">frasco (Frascos)</option>
+              <option value="lata">lata (Latas)</option>
+              <option value="paquete">paquete (Paquetes)</option>
+              <option value="sobre">sobre (Sobres)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Categoría</label>
+            <select 
+              id="editItemCategory" 
+              class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none">
+              <option value="Carnes y Aves">Carnes y Aves</option>
+              <option value="Verduras y Tubérculos">Verduras y Tubérculos</option>
+              <option value="Frutas">Frutas</option>
+              <option value="Especias y Condimentos">Especias y Condimentos</option>
+              <option value="Abarrotes y Despensa">Abarrotes y Despensa</option>
+              <option value="Hogar y Limpieza">Hogar y Limpieza</option>
+              <option value="Lácteos y Huevos">Lácteos y Huevos</option>
+              <option value="Otros">Otros</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Precio pagado (S/)</label>
+            <input 
+              type="number" 
+              step="0.05" 
+              min="0" 
+              id="editItemPrice" 
+              placeholder="0.00"
+              class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+          <div>
+            <label class="text-[10px] text-slate-400 font-bold block mb-1">Pedido por:</label>
+            <select id="editItemCreatedBy" class="w-full px-2 py-1.5 rounded-lg border bg-slate-50 font-semibold"></select>
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 font-bold block mb-1">Pagado por:</label>
+            <select id="editItemBoughtBy" class="w-full px-2 py-1.5 rounded-lg border bg-slate-50 font-semibold"></select>
+          </div>
+        </div>
+
+        <div class="pt-2 flex items-center gap-2">
+          <button 
+            type="button" 
+            onclick="deleteCurrentEditItem()" 
+            class="px-3 py-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-xs transition">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+          <button 
+            type="button" 
+            onclick="closeEditItemModal()" 
+            class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition">
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-sm transition">
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTRAR PRECIO Y COMPRADOR AL TACHAR -->
+  <div id="pricePromptModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center p-4">
+    <div class="w-full max-w-xs bg-white rounded-2xl shadow-2xl p-5 space-y-4 animate-scale">
+      <div class="text-center">
+        <div class="w-12 h-12 mx-auto mb-2 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-tags"></i>
+        </div>
+        <h3 class="text-sm font-extrabold text-slate-900" id="promptItemTitle">¿Cuánto te costó?</h3>
+        <p class="text-xs text-slate-500 mt-0.5" id="promptItemQty">Ingresa el monto gastado para tachar</p>
+      </div>
+
+      <div class="relative">
+        <span class="absolute left-3.5 top-2.5 font-bold text-sm text-slate-400">S/</span>
+        <input 
+          type="number" 
+          step="0.05" 
+          min="0.01" 
+          id="promptPriceInput" 
+          placeholder="0.00" 
+          class="w-full pl-9 pr-3 py-2 text-base font-extrabold text-slate-800 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-brand-500 text-center">
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-[11px] font-bold text-slate-600 block text-center">¿Quién pagó este producto?</label>
+        <div class="grid grid-cols-2 gap-1.5" id="promptBuyerPills"></div>
+      </div>
+
+      <div class="flex gap-2 pt-1">
+        <button 
+          type="button" 
+          onclick="cancelPricePrompt()" 
+          class="flex-1 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition">
+          Cancelar
+        </button>
+        <button 
+          type="button" 
+          onclick="confirmPricePrompt()" 
+          class="flex-1 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-sm transition">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: HISTÓRICO Y TENDENCIA DE PRECIOS -->
+  <div id="priceHistoryModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-arrow-trend-up text-brand-600"></i> Histórico y Variación de Precios
+          </h3>
+          <span class="text-[11px] text-slate-500">Normalizado a unidad base (por kg o por unidad)</span>
+        </div>
+        <button type="button" onclick="closePriceHistoryModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Seleccionar producto para analizar:</label>
+        <select 
+          id="historyProductSelect" 
+          onchange="onSelectHistoryProduct(this.value)"
+          class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 font-semibold focus:outline-none">
+        </select>
+      </div>
+
+      <div id="historyStatsGrid" class="grid grid-cols-3 gap-2"></div>
+
+      <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200">
+        <canvas id="priceTrendCanvas" height="180"></canvas>
+      </div>
+
+      <div class="space-y-1.5">
+        <span class="text-xs font-bold text-slate-700 block">Detalle de compras registradas:</span>
+        <div id="historyTableContainer" class="max-h-40 overflow-y-auto rounded-xl border border-slate-100 divide-y divide-slate-100 text-xs bg-white"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: REPORTES Y ESTADÍSTICAS -->
+  <div id="reportsModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-brand-600"></i> Reporte del Hogar y Gastos
+          </h3>
+          <span class="text-[11px] text-slate-500">Consolidado conjunto y desglose individual</span>
+        </div>
+        <button type="button" onclick="closeReportsModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <div class="flex gap-1.5 flex-wrap">
+        <button type="button" onclick="setReportPeriod('week')" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-brand-50 border border-brand-200 text-brand-800">Esta Semana</button>
+        <button type="button" onclick="setReportPeriod('month')" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-700">Este Mes</button>
+        <button type="button" onclick="setReportPeriod('3months')" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-700">3 Meses</button>
+        <button type="button" onclick="setReportPeriod('6months')" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-700">6 Meses</button>
+        <button type="button" onclick="setReportPeriod('all')" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-700">Todo</button>
+      </div>
+
+      <div id="reportSummaryGrid" class="grid grid-cols-3 gap-2"></div>
+
+      <div class="bg-gradient-to-br from-slate-50 to-emerald-50/30 p-3 rounded-2xl border border-slate-200 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-scale-balanced text-brand-600"></i> ¿Quién gastó cuánto?
+          </span>
+          <span class="text-[10px] text-slate-400 font-semibold">Reparto del gasto</span>
+        </div>
+
+        <div id="reportPartnersCards" class="grid grid-cols-2 gap-2"></div>
+        <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden flex" id="reportPartnerRatioBar"></div>
+      </div>
+
+      <div class="space-y-2">
+        <span class="text-xs font-bold text-slate-700 block">Distribución por Categorías:</span>
+        <div id="reportCategoryBars" class="space-y-1.5"></div>
+      </div>
+
+      <div class="space-y-2">
+        <span class="text-xs font-bold text-slate-700 block">Productos de Mayor Inversión:</span>
+        <div id="reportTopItems" class="space-y-1 text-xs"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GESTIÓN DE MIS LISTAS -->
+  <div id="listsModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-brand-600"></i> Mis Listas de Compras
+        </h3>
+        <button type="button" onclick="closeListsModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <button 
+        type="button" 
+        onclick="openCreateNewListModal()" 
+        class="w-full py-2.5 px-3 rounded-xl bg-brand-50 border border-brand-200 text-brand-700 font-bold text-xs flex items-center justify-center gap-2 hover:bg-brand-100 transition">
+        <i class="fa-solid fa-plus-circle"></i>
+        <span>Crear Nueva Lista Independiente</span>
+      </button>
+
+      <div class="space-y-1.5">
+        <input 
+          type="text" 
+          id="listSearchInput" 
+          oninput="renderListsCards()" 
+          placeholder="Filtrar por nombre, mes o ingrediente..." 
+          class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none">
+        
+        <div class="flex gap-1 overflow-x-auto no-scrollbar text-[11px]">
+          <button type="button" onclick="setListTimeFilter('all')" class="list-time-btn px-2 py-0.5 rounded-lg bg-brand-100 text-brand-800 font-bold">Todas</button>
+          <button type="button" onclick="setListTimeFilter('month')" class="list-time-btn px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">Este mes</button>
+          <button type="button" onclick="setListTimeFilter('3months')" class="list-time-btn px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">3 meses</button>
+          <button type="button" onclick="setListTimeFilter('6months')" class="list-time-btn px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">6 meses</button>
+        </div>
+      </div>
+
+      <div id="listsCardsRoot" class="space-y-2 max-h-72 overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: NUBE SUPABASE Y SINCRONIZACIÓN -->
+  <div id="cloudModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-cloud text-brand-600"></i> Nube y Tiempo Real (Pareja)
+        </h3>
+        <button type="button" onclick="closeCloudModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs flex items-center justify-between">
+        <div>
+          <span class="font-bold text-emerald-900 flex items-center gap-1.5">
+            <i class="fa-solid fa-bolt text-emerald-600"></i>
+            Sincronización en Vivo
+          </span>
+          <span class="text-[11px] text-emerald-700 block mt-0.5" id="cloudLastSyncLabel">Sincronizado con Supabase</span>
+        </div>
+        <span id="cloudStatusBadgePill" class="text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-200 text-emerald-900">
+          Conectado
+        </span>
+      </div>
+
+      <div class="pt-2 border-t border-slate-100 space-y-2">
+        <button 
+          type="button" 
+          onclick="syncFromSupabase(true)" 
+          class="w-full py-2.5 px-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs flex items-center justify-between transition">
+          <span class="flex items-center gap-2">
+            <i class="fa-solid fa-arrows-rotate text-white"></i>
+            <span>Sincronizar Listas Ahora</span>
+          </span>
+          <i class="fa-solid fa-chevron-right text-brand-200 text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Respaldo Local .JSON -->
+      <div class="pt-2 border-t border-slate-100 space-y-2">
+        <span class="text-xs font-bold text-slate-800 uppercase tracking-wider block">Copia de Seguridad Manual (.JSON)</span>
+        <div class="grid grid-cols-2 gap-2">
+          <button 
+            type="button" 
+            onclick="exportLocalBackupFile()" 
+            class="py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition">
+            <i class="fa-solid fa-download"></i> Exportar
+          </button>
+          <label class="py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer text-center">
+            <i class="fa-solid fa-upload"></i> Importar
+            <input type="file" id="backupFileInput" accept=".json" class="hidden" onchange="importLocalBackupFile(event)">
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CAMBIAR FECHA DE LISTA ACTIVA -->
+  <div id="changeDateModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center p-4">
+    <div class="w-full max-w-xs bg-white rounded-2xl shadow-2xl p-5 space-y-4">
+      <div class="text-center">
+        <div class="w-12 h-12 mx-auto mb-2 rounded-2xl bg-brand-50 border border-brand-200 text-brand-600 flex items-center justify-center text-lg">
+          <i class="fa-regular fa-calendar-days"></i>
+        </div>
+        <h3 class="text-sm font-extrabold text-slate-900">Fecha de Compra</h3>
+        <p class="text-xs text-slate-500">Modifica el día asignado a esta lista</p>
+      </div>
+      <input type="date" id="changeDateInput" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-800 text-center">
+      <div class="flex gap-2">
+        <button type="button" onclick="closeChangeDateModal()" class="flex-1 py-2 rounded-xl border text-slate-600 font-bold text-xs">Cancelar</button>
+        <button type="button" onclick="confirmChangeDate()" class="flex-1 py-2 rounded-xl bg-brand-600 text-white font-bold text-xs">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CREAR NUEVA LISTA -->
+  <div id="createListModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center p-4">
+    <div class="w-full max-w-xs bg-white rounded-2xl shadow-2xl p-5 space-y-4">
+      <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+        <i class="fa-solid fa-folder-plus text-brand-600"></i> Nueva Lista del Hogar
+      </h3>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nombre / Título</label>
+          <input type="text" id="newListTitleInput" placeholder="Ej. Mercado Semanal, Wong, etc." class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Fecha</label>
+          <input type="date" id="newListDateInput" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border font-bold text-slate-800">
+        </div>
+      </div>
+      <div class="flex gap-2 pt-1">
+        <button type="button" onclick="closeCreateNewListModal()" class="flex-1 py-2 rounded-xl border text-slate-600 font-bold text-xs">Cancelar</button>
+        <button type="button" onclick="confirmCreateNewList()" class="flex-1 py-2 rounded-xl bg-brand-600 text-white font-bold text-xs">Crear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIGURACIÓN DE IA -->
+  <div id="aiSettingsModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-brand-600"></i> Motor de Inteligencia Artificial
+        </h3>
+        <button type="button" onclick="closeAISettingsModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-500 leading-relaxed">
+        Configura cómo la app procesa las imágenes. Para uso familiar puedes usar tu clave de Google AI Studio.
+      </p>
+
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-bold text-slate-700 block">Modo de Operación:</label>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <label class="flex items-center gap-2 p-2 rounded-xl border bg-slate-50 cursor-pointer has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50/60 transition">
+            <input type="radio" name="aiOperationMode" value="direct_key" checked onchange="toggleAIModeFields()" class="text-brand-600">
+            <div>
+              <span class="font-bold text-slate-800 block text-[11px]">Uso Privado</span>
+              <span class="text-[9px] text-slate-400 block">Clave personal</span>
+            </div>
+          </label>
+          <label class="flex items-center gap-2 p-2 rounded-xl border bg-slate-50 cursor-pointer has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50/60 transition">
+            <input type="radio" name="aiOperationMode" value="backend_proxy" onchange="toggleAIModeFields()" class="text-brand-600">
+            <div>
+              <span class="font-bold text-slate-800 block text-[11px]">Servidor Proxy</span>
+              <span class="text-[9px] text-slate-400 block">Supabase</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div id="aiDirectKeyFields" class="space-y-2">
+        <label class="block text-xs font-bold text-slate-700">Google Gemini API Key</label>
+        <input 
+          type="password" 
+          id="geminiApiKeyInput" 
+          placeholder="AIzaSy..." 
+          class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-brand-500 font-mono">
+        <div class="text-[10px] text-slate-400 flex items-center justify-between">
+          <span>Queda guardada en este teléfono</span>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-brand-600 font-bold underline flex items-center gap-1">
+            Obtener clave gratis <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
+          </a>
+        </div>
+      </div>
+
+      <div id="aiBackendProxyFields" class="hidden space-y-2">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">URL de la Edge Function (Supabase)</label>
+          <input 
+            type="text" 
+            id="aiProxyUrlInput" 
+            placeholder="https://...supabase.co/functions/v1/scan-list" 
+            class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none font-mono">
+        </div>
+      </div>
+
+      <div class="pt-2 flex gap-2">
+        <button 
+          type="button" 
+          onclick="closeAISettingsModal()" 
+          class="flex-1 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs">
+          Cancelar
+        </button>
+        <button 
+          type="button" 
+          onclick="saveAISettings()" 
+          class="flex-1 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-sm">
+          Guardar Ajustes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIRMACIÓN TÁCTIL (Elimina bloqueos de sandbox) -->
+  <div id="confirmDialogModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center p-4">
+    <div class="w-full max-w-xs bg-white rounded-2xl shadow-2xl p-5 space-y-3 animate-scale text-center">
+      <div id="confirmDialogIcon" class="w-12 h-12 mx-auto rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center text-lg">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 class="text-sm font-extrabold text-slate-900" id="confirmDialogTitle">¿Estás seguro?</h3>
+      <p class="text-xs text-slate-500" id="confirmDialogMessage">Esta acción no se puede deshacer.</p>
+      <div class="flex gap-2 pt-2">
+        <button type="button" id="confirmDialogCancelBtn" class="flex-1 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50">
+          Cancelar
+        </button>
+        <button type="button" id="confirmDialogConfirmBtn" class="flex-1 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toastNotification" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-slate-900/90 backdrop-blur-md text-white text-xs font-semibold shadow-lg flex items-center gap-2 transition-all duration-300 opacity-0 pointer-events-none -translate-y-4">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-brand-400"></i>
+    <span id="toastMsg">Listo</span>
+  </div>
+
+  <script>
+    // ========================================================
+    // BACKEND & MULTI-USER STATE
+    // ========================================================
+    const STORAGE_KEY = 'mercado_inteligente_v3';
+    const SUPABASE_CONFIG_KEY = 'mercado_supabase_cfg';
+    const PARTNERS_KEY = 'mercado_partners_cfg';
+    const AI_CONFIG_KEY = 'mercado_ai_config_v1';
+
+    // Backend Supabase ya configurado para persistencia directa
+    const DEFAULT_SUPABASE_URL = 'https://hopyxdmkghmbxzhqmqcu.supabase.co';
+    const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvcHl4ZG1rZ2htYnh6aHFtcWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NDE4NTIsImV4cCI6MjEwNjIxNzg1Mn0.7AI5JHBpSaI5NS-HIIJ4BYau0ktsVFmi72F1i5eIY4Y';
+
+    let aiConfig = {
+      mode: 'direct_key',
+      apiKey: '',
+      proxyUrl: 'https://hopyxdmkghmbxzhqmqcu.supabase.co/functions/v1/scan-list',
+      monthlyFreeScans: 10,
+      scansUsedThisMonth: 0
+    };
+
+    let partnersConfig = {
+      p1: { id: 'p1', name: 'Él', color: '#059669', bg: 'bg-emerald-600', pillBg: 'bg-emerald-100 text-emerald-800' },
+      p2: { id: 'p2', name: 'Ella', color: '#db2777', bg: 'bg-pink-600', pillBg: 'bg-pink-100 text-pink-800' },
+      activeId: 'p1'
+    };
+
+    function getTodayYMD() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function generateUUID() {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    function isValidUUID(str) {
+      if (!str || typeof str !== 'string') return false;
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+    }
+
+    let appState = {
+      activeListId: null,
+      lists: []
+    };
+
+    let selectedCategoryFilter = 'all';
+    let searchQuery = '';
+    let supabaseClient = null;
+    let isSupabaseOnline = false;
+    let isPerformingLocalPush = false; // Bandera para evitar que nuestro propio push dispare un fetch destructivo
+    let priceChartInstance = null;
+    let itemPendingPrice = null;
+    let promptSelectedBuyer = null;
+    let activeListTimeFilter = 'all';
+    let currentReportPeriod = 'month';
+    let realtimeChannel = null;
+
+    let currentScanType = 'list';
+    let detectedScannedItems = [];
+    let detectedReceiptMeta = { store: '', date: '', total: null };
+    let pendingScanBase64 = null;
+    let scanSelectedBuyer = null;
+
+    // Semilla predeterminada con los productos del cuaderno
+    function getDefaultSeedData() {
+      const today = getTodayYMD();
+      const p1 = partnersConfig.p1.name;
+      const p2 = partnersConfig.p2.name;
+
+      const notebookItems = [
+        { id: generateUUID(), name: "Milanesas", qty: "4 unid", category: "Carnes y Aves", checked: false, price: null, creado_por: p1, comprado_por: null },
+        { id: generateUUID(), name: "Carne para guiso", qty: "0.5 kg", category: "Carnes y Aves", checked: false, price: null, creado_por: p1, comprado_por: null },
+        { id: generateUUID(), name: "Medallones de pavita", qty: "4 unid", category: "Carnes y Aves", checked: false, price: null, creado_por: p2, comprado_por: null },
+        { id: generateUUID(), name: "Chuletas", qty: "4 unid", category: "Carnes y Aves", checked: false, price: null, creado_por: p1, comprado_por: null },
+        { id: generateUUID(), name: "Pechuga de pollo", qty: "1 unid", category: "Carnes y Aves", checked: false, price: null, creado_por: p1, comprado_por: null },
+        { id: generateUUID(), name: "Papa para freír", qty: "1 kg", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p1, comprado_por: null },
+        { id: generateUUID(), name: "Tomate", qty: "1 kg", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p2, comprado_por: null },
+        { id: generateUUID(), name: "Cebolla", qty: "1 kg", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p2, comprado_por: null },
+        { id: generateUUID(), name: "Lechuga", qty: "1 unid", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p1, comprado_por: null },
+        { id: generateUUID(), name: "Papa blanca", qty: "1 kg", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p1, comprado_por: null },
+        { id: generateUUID(), name: "Alverjita", qty: "0.5 kg", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p2, comprado_por: null },
+        { id: generateUUID(), name: "Kion", qty: "0.25 kg", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p1, comprado_por: null },
+        { id: generateUUID(), name: "Cebolla China", qty: "1 atado", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p1, comprado_por: null },
+        { id: generateUUID(), name: "Fresas", qty: "1 kg", category: "Frutas", checked: false, price: null, creado_por: p2, comprado_por: null },
+        { id: generateUUID(), name: "Arándanos", qty: "0.25 kg", category: "Frutas", checked: false, price: null, creado_por: p2, comprado_por: null },
+        { id: generateUUID(), name: "Carambola", qty: "0.5 kg", category: "Frutas", checked: false, price: null, creado_por: p1, comprado_por: null },
+        { id: generateUUID(), name: "Pasta de ají amarillo", qty: "1 frasco", category: "Especias y Condimentos", checked: false, price: null, creado_por: p2, comprado_por: null },
+        { id: generateUUID(), name: "Ajinomoto", qty: "1 sobre", category: "Especias y Condimentos", checked: false, price: null, creado_por: p1, comprado_por: null },
+        { id: generateUUID(), name: "Ajo", qty: "0.25 kg", category: "Especias y Condimentos", checked: false, price: null, creado_por: p1, comprado_por: null },
+        { id: generateUUID(), name: "Ajonjolí", qty: "1 sobre", category: "Especias y Condimentos", checked: false, price: null, creado_por: p2, comprado_por: null },
+        { id: generateUUID(), name: "Escoba", qty: "1 unid", category: "Hogar y Limpieza", checked: false, price: null, creado_por: p1, comprado_por: null },
+        { id: generateUUID(), name: "Recogedor", qty: "1 unid", category: "Hogar y Limpieza", checked: false, price: null, creado_por: p1, comprado_por: null },
+        { id: generateUUID(), name: "Frascos especería", qty: "3 unid", category: "Hogar y Limpieza", checked: false, price: null, creado_por: p2, comprado_por: null }
+      ];
+
+      const currentListId = generateUUID();
+      return {
+        activeListId: currentListId,
+        lists: [
+          {
+            id: currentListId,
+            title: "Mercado Principal (Cuaderno)",
+            date: today,
+            creado_por: p1,
+            items: notebookItems
+          }
+        ]
+      };
+    }
+
+    function restoreDefaultSeedData() {
+      appState = getDefaultSeedData();
+      saveAppState(true);
+      renderApp();
+      showToast("Lista del cuaderno restablecida", "fa-check");
+    }
+
+    function loadPartnersConfig() {
+      try {
+        const raw = localStorage.getItem(PARTNERS_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.p1 && parsed.p2) {
+            partnersConfig.p1.name = parsed.p1.name || 'Él';
+            partnersConfig.p2.name = parsed.p2.name || 'Ella';
+            partnersConfig.activeId = parsed.activeId || 'p1';
+          }
+        }
+      } catch (e) {}
+      updateTopMemberBadge();
+    }
+
+    function savePartnersConfig() {
+      try {
+        localStorage.setItem(PARTNERS_KEY, JSON.stringify(partnersConfig));
+      } catch (e) {}
+      updateTopMemberBadge();
+    }
+
+    function getActiveMember() {
+      return partnersConfig.activeId === 'p2' ? partnersConfig.p2 : partnersConfig.p1;
+    }
+
+    function updateTopMemberBadge() {
+      const active = getActiveMember();
+      const avatar = document.getElementById('currentMemberAvatar');
+      const name = document.getElementById('currentMemberName');
+      if (avatar && name) {
+        avatar.textContent = active.name.charAt(0).toUpperCase();
+        avatar.className = `w-5 h-5 rounded-full ${active.bg} text-white flex items-center justify-center font-bold text-[10px] shadow-sm`;
+        name.textContent = active.name;
+      }
+      const authorBadge = document.getElementById('newItemAuthorBadge');
+      if (authorBadge) authorBadge.textContent = active.name;
+    }
+
+    function openProfileModal() {
+      const container = document.getElementById('memberButtonsContainer');
+      container.innerHTML = `
+        <button type="button" onclick="selectActiveMember('p1')" class="p-3 rounded-2xl border text-center transition ${
+          partnersConfig.activeId === 'p1' ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20' : 'bg-slate-50 border-slate-200'
+        }">
+          <div class="w-10 h-10 mx-auto rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm mb-1">
+            ${partnersConfig.p1.name.charAt(0)}
+          </div>
+          <span class="font-extrabold text-xs text-slate-800 block">${partnersConfig.p1.name}</span>
+          <span class="text-[10px] text-slate-400">Esposo</span>
+        </button>
+
+        <button type="button" onclick="selectActiveMember('p2')" class="p-3 rounded-2xl border text-center transition ${
+          partnersConfig.activeId === 'p2' ? 'border-pink-500 bg-pink-50 ring-2 ring-pink-500/20' : 'bg-slate-50 border-slate-200'
+        }">
+          <div class="w-10 h-10 mx-auto rounded-full bg-pink-600 text-white flex items-center justify-center font-bold text-sm mb-1">
+            ${partnersConfig.p2.name.charAt(0)}
+          </div>
+          <span class="font-extrabold text-xs text-slate-800 block">${partnersConfig.p2.name}</span>
+          <span class="text-[10px] text-slate-400">Esposa</span>
+        </button>
+      `;
+
+      document.getElementById('partner1Input').value = partnersConfig.p1.name;
+      document.getElementById('partner2Input').value = partnersConfig.p2.name;
+      document.getElementById('profileModal').classList.remove('hidden');
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.add('hidden');
+    }
+
+    function selectActiveMember(id) {
+      partnersConfig.activeId = id;
+      savePartnersConfig();
+      closeProfileModal();
+      showToast(`Cambiado a perfil: ${getActiveMember().name}`, "fa-user-check");
+    }
+
+    function saveCustomPartners() {
+      const n1 = document.getElementById('partner1Input').value.trim();
+      const n2 = document.getElementById('partner2Input').value.trim();
+      if (n1) partnersConfig.p1.name = n1;
+      if (n2) partnersConfig.p2.name = n2;
+      savePartnersConfig();
+      closeProfileModal();
+      renderApp();
+      showToast("Nombres actualizados", "fa-check");
+    }
+
+    function playDingSound() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.25);
+      } catch (e) {}
+    }
+
+    // Carga local protegida (0ms de latencia)
+    function loadAppState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.lists) && parsed.lists.length > 0) {
+            appState = parsed;
+            appState.lists.forEach(l => {
+              if (!isValidUUID(l.id)) l.id = generateUUID();
+              if (Array.isArray(l.items)) {
+                l.items.forEach(it => {
+                  if (!isValidUUID(it.id)) it.id = generateUUID();
+                  if (!it.creado_por) it.creado_por = partnersConfig.p1.name;
+                });
+              }
+            });
+            if (!appState.activeListId || !appState.lists.some(l => l.id === appState.activeListId)) {
+              appState.activeListId = appState.lists[0].id;
+            }
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Error cargando estado local:", err);
+      }
+      appState = getDefaultSeedData();
+    }
+
+    function saveAppState(triggerSync = true) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        if (triggerSync) triggerBackgroundSync();
+      } catch (err) {}
+    }
+
+    function getActiveList() {
+      if (!appState.lists || appState.lists.length === 0) {
+        appState = getDefaultSeedData();
+      }
+      let found = appState.lists.find(l => l.id === appState.activeListId);
+      if (!found) {
+        found = appState.lists[0];
+        appState.activeListId = found.id;
+      }
+      return found;
+    }
+
+    function renderApp() {
+      const activeList = getActiveList();
+      if (!activeList) return;
+
+      document.getElementById('topListTitle').textContent = activeList.title || 'Lista de Mercado';
+      
+      const dateParts = (activeList.date || getTodayYMD()).split('-');
+      if (dateParts.length === 3) {
+        const dateObj = new Date(dateParts[0], parseInt(dateParts[1], 10) - 1, dateParts[2]);
+        const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+        document.getElementById('topListDate').textContent = `${dayNames[dateObj.getDay()]}, ${dateObj.getDate()} ${monthNames[dateObj.getMonth()]}`;
+      }
+
+      const items = activeList.items || [];
+      const totalItems = items.length;
+      const checkedItems = items.filter(i => i.checked);
+      const totalSpent = items.reduce((sum, item) => sum + (item.checked && item.price ? Number(item.price) : 0), 0);
+
+      document.getElementById('headerTotalSpent').textContent = `S/ ${totalSpent.toFixed(2)}`;
+      document.getElementById('headerProgressCount').textContent = `${checkedItems.length} / ${totalItems}`;
+      const percentage = totalItems > 0 ? Math.round((checkedItems.length / totalItems) * 100) : 0;
+      document.getElementById('headerProgressBar').style.width = `${percentage}%`;
+
+      renderCategoryFilters(items);
+      renderItemsList(items);
+    }
+
+    function renderCategoryFilters(items) {
+      const categories = ['all', ...new Set(items.map(i => i.category || 'Otros'))];
+      const container = document.getElementById('categoryFilterContainer');
+      container.innerHTML = '';
+
+      categories.forEach(cat => {
+        const isSelected = selectedCategoryFilter === cat;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `px-3 py-1 rounded-full font-semibold shrink-0 transition ${
+          isSelected ? 'bg-brand-600 text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+        }`;
+        btn.textContent = cat === 'all' ? 'Todos' : cat;
+        btn.onclick = () => {
+          selectedCategoryFilter = cat;
+          renderApp();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function renderItemsList(items) {
+      const root = document.getElementById('categoriesListRoot');
+      const emptyState = document.getElementById('emptyStateBox');
+      root.innerHTML = '';
+
+      const q = searchQuery.toLowerCase().trim();
+      const filtered = items.filter(it => {
+        const matchesCategory = selectedCategoryFilter === 'all' || (it.category || 'Otros') === selectedCategoryFilter;
+        const matchesSearch = !q || it.name.toLowerCase().includes(q) || (it.qty && it.qty.toLowerCase().includes(q));
+        return matchesCategory && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      const grouped = {};
+      filtered.forEach(it => {
+        const cat = it.category || 'Otros';
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(it);
+      });
+
+      Object.keys(grouped).forEach(cat => {
+        const groupWrapper = document.createElement('div');
+        groupWrapper.className = 'bg-white rounded-2xl p-3 border border-slate-200/80 shadow-sm space-y-2';
+
+        const header = document.createElement('div');
+        header.className = 'flex items-center justify-between border-b border-slate-100 pb-1.5 px-1';
+        header.innerHTML = `
+          <span class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+            ${cat}
+          </span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+            ${grouped[cat].length}
+          </span>
+        `;
+        groupWrapper.appendChild(header);
+
+        const itemsList = document.createElement('div');
+        itemsList.className = 'divide-y divide-slate-100';
+
+        grouped[cat].forEach(item => {
+          const row = document.createElement('div');
+          row.className = `py-2.5 px-1 flex items-center justify-between gap-2 strikethrough-transition ${
+            item.checked ? 'opacity-55 bg-slate-50/60 rounded-xl px-2' : ''
+          }`;
+
+          const creatorTag = item.creado_por ? item.creado_por : partnersConfig.p1.name;
+          const buyerTag = item.comprado_por ? item.comprado_por : (item.checked ? creatorTag : null);
+          const isP2Creator = creatorTag.toLowerCase().includes(partnersConfig.p2.name.toLowerCase());
+          const isP2Buyer = buyerTag && buyerTag.toLowerCase().includes(partnersConfig.p2.name.toLowerCase());
+
+          row.innerHTML = `
+            <div class="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer" onclick="toggleItemStrike('${item.id}')">
+              <div class="w-5 h-5 rounded-lg border flex items-center justify-center transition shrink-0 ${
+                item.checked ? 'bg-brand-600 border-brand-600 text-white' : 'border-slate-300 bg-white hover:border-brand-500'
+              }">
+                ${item.checked ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs font-bold block truncate text-slate-800 ${item.checked ? 'line-through text-slate-400' : ''}">
+                    ${item.name}
+                  </span>
+                  <span class="text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
+                    isP2Creator ? 'bg-pink-100 text-pink-700' : 'bg-emerald-100 text-emerald-800'
+                  }" title="Pedido por ${creatorTag}">
+                    ${creatorTag.charAt(0)}
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                  <span>${item.qty || '1 unid'}</span>
+                  ${buyerTag && item.checked ? `
+                    <span>•</span>
+                    <span class="text-[10px] font-semibold ${isP2Buyer ? 'text-pink-600' : 'text-emerald-700'}">
+                      Compró: ${buyerTag}
+                    </span>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button 
+                type="button" 
+                onclick="promptEditItemPrice('${item.id}')"
+                class="px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                  item.price 
+                    ? (item.checked ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700 hover:bg-slate-200')
+                    : 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
+                }">
+                <span>${item.price ? `S/ ${Number(item.price).toFixed(2)}` : '+ S/'}</span>
+              </button>
+
+              <button 
+                type="button" 
+                onclick="openItemPriceTrend('${item.name}')" 
+                title="Historial de precio"
+                class="w-7 h-7 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 flex items-center justify-center transition">
+                <i class="fa-solid fa-chart-line text-xs"></i>
+              </button>
+
+              <button 
+                type="button" 
+                onclick="openEditItemModal('${item.id}')" 
+                title="Editar"
+                class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition">
+                <i class="fa-solid fa-pen text-[11px]"></i>
+              </button>
+            </div>
+          `;
+
+          itemsList.appendChild(row);
+        });
+
+        groupWrapper.appendChild(itemsList);
+        root.appendChild(groupWrapper);
+      });
+    }
+
+    function toggleItemStrike(itemId) {
+      const activeList = getActiveList();
+      if (!activeList) return;
+      const item = activeList.items.find(i => i.id === itemId);
+      if (!item) return;
+
+      if (!item.checked) {
+        if (!item.price || Number(item.price) <= 0) {
+          itemPendingPrice = item;
+          promptSelectedBuyer = getActiveMember().name;
+          document.getElementById('promptItemTitle').textContent = `¿Precio de ${item.name}?`;
+          document.getElementById('promptItemQty').textContent = `Cantidad: ${item.qty || '1 unid'}`;
+          document.getElementById('promptPriceInput').value = '';
+          renderBuyerPills();
+          document.getElementById('pricePromptModal').classList.remove('hidden');
+          setTimeout(() => document.getElementById('promptPriceInput').focus(), 100);
+          return;
+        }
+
+        item.checked = true;
+        item.comprado_por = getActiveMember().name;
+        playDingSound();
+      } else {
+        item.checked = false;
+      }
+
+      saveAppState();
+      renderApp();
+    }
+
+    function renderBuyerPills() {
+      const container = document.getElementById('promptBuyerPills');
+      container.innerHTML = `
+        <button type="button" onclick="setPromptBuyer('${partnersConfig.p1.name}')" class="py-1.5 px-2 rounded-xl text-xs font-bold border transition ${
+          promptSelectedBuyer === partnersConfig.p1.name ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-700'
+        }">
+          ${partnersConfig.p1.name}
+        </button>
+        <button type="button" onclick="setPromptBuyer('${partnersConfig.p2.name}')" class="py-1.5 px-2 rounded-xl text-xs font-bold border transition ${
+          promptSelectedBuyer === partnersConfig.p2.name ? 'bg-pink-600 text-white border-pink-600 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-700'
+        }">
+          ${partnersConfig.p2.name}
+        </button>
+      `;
+    }
+
+    function setPromptBuyer(name) {
+      promptSelectedBuyer = name;
+      renderBuyerPills();
+    }
+
+    function confirmPricePrompt() {
+      const input = document.getElementById('promptPriceInput');
+      const val = parseFloat(input.value);
+      if (isNaN(val) || val <= 0) {
+        showToast("Ingresa un precio válido", "fa-triangle-exclamation");
+        return;
+      }
+
+      if (itemPendingPrice) {
+        itemPendingPrice.price = val;
+        itemPendingPrice.checked = true;
+        itemPendingPrice.comprado_por = promptSelectedBuyer || getActiveMember().name;
+        playDingSound();
+        saveAppState();
+        renderApp();
+      }
+
+      cancelPricePrompt();
+    }
+
+    function cancelPricePrompt() {
+      itemPendingPrice = null;
+      document.getElementById('pricePromptModal').classList.add('hidden');
+    }
+
+    function promptEditItemPrice(itemId) {
+      const activeList = getActiveList();
+      const item = activeList && activeList.items.find(i => i.id === itemId);
+      if (!item) return;
+
+      itemPendingPrice = item;
+      promptSelectedBuyer = item.comprado_por || getActiveMember().name;
+      document.getElementById('promptItemTitle').textContent = `Editar precio: ${item.name}`;
+      document.getElementById('promptItemQty').textContent = `Cantidad: ${item.qty || '1 unid'}`;
+      document.getElementById('promptPriceInput').value = item.price ? Number(item.price) : '';
+      renderBuyerPills();
+      document.getElementById('pricePromptModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('promptPriceInput').focus(), 100);
+    }
+
+    function parseQuantityIntoParts(qtyStr) {
+      if (!qtyStr || typeof qtyStr !== 'string') return { num: 1, unit: 'unid', baseFactor: 1, baseUnit: 'unid' };
+      let clean = qtyStr.toLowerCase().trim();
+      let num = 1;
+      if (clean.includes('1/2')) num = 0.5;
+      else if (clean.includes('1/4')) num = 0.25;
+      else if (clean.includes('3/4')) num = 0.75;
+      else {
+        const matchNum = clean.match(/^([0-9]+([.,][0-9]+)?)/);
+        if (matchNum) num = parseFloat(matchNum[1].replace(',', '.'));
+      }
+
+      let unit = 'unid';
+      let baseFactor = num;
+      let baseUnit = 'unid';
+
+      if (clean.includes('kg') || clean.includes('kilo')) { unit = 'kg'; baseUnit = 'kg'; baseFactor = num; }
+      else if (clean.includes('gr') || clean.includes('g')) { unit = 'gr'; baseUnit = 'kg'; baseFactor = num / 1000; }
+      else if (clean.includes('lt') || clean.includes('litro')) { unit = 'lt'; baseUnit = 'lt'; baseFactor = num; }
+      else if (clean.includes('ml')) { unit = 'ml'; baseUnit = 'lt'; baseFactor = num / 1000; }
+      else if (clean.includes('atado')) { unit = 'atado'; baseUnit = 'atado'; baseFactor = num; }
+      else if (clean.includes('frasco')) { unit = 'frasco'; baseUnit = 'frasco'; baseFactor = num; }
+      else if (clean.includes('lata')) { unit = 'lata'; baseUnit = 'lata'; baseFactor = num; }
+      else if (clean.includes('paquete')) { unit = 'paquete'; baseUnit = 'paquete'; baseFactor = num; }
+      else if (clean.includes('sobre')) { unit = 'sobre'; baseUnit = 'sobre'; baseFactor = num; }
+
+      return { num, unit, baseFactor: baseFactor > 0 ? baseFactor : 1, baseUnit };
+    }
+
+    function openAddItemModal() {
+      document.getElementById('addItemForm').reset();
+      document.getElementById('newItemQuantityNum').value = '1';
+      document.getElementById('newItemUnit').value = 'kg';
+      document.getElementById('newItemAuthorBadge').textContent = getActiveMember().name;
+      document.getElementById('addItemModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('newItemName').focus(), 100);
+    }
+
+    function closeAddItemModal() {
+      document.getElementById('addItemModal').classList.add('hidden');
+    }
+
+    function setNewItemFraction(num, unit) {
+      document.getElementById('newItemQuantityNum').value = num;
+      document.getElementById('newItemUnit').value = unit;
+    }
+
+    function handleAddItemSubmit(e) {
+      e.preventDefault();
+      const activeList = getActiveList();
+      if (!activeList) return;
+
+      const name = document.getElementById('newItemName').value.trim();
+      const num = parseFloat(document.getElementById('newItemQuantityNum').value) || 1;
+      const unit = document.getElementById('newItemUnit').value;
+      const category = document.getElementById('newItemCategory').value;
+      const priceVal = parseFloat(document.getElementById('newItemPrice').value);
+
+      if (!name) return;
+
+      const newItem = {
+        id: generateUUID(),
+        name: name,
+        qty: `${num} ${unit}`,
+        category: category,
+        checked: false,
+        price: !isNaN(priceVal) && priceVal > 0 ? priceVal : null,
+        creado_por: getActiveMember().name,
+        comprado_por: null
+      };
+
+      activeList.items.push(newItem);
+      saveAppState();
+      renderApp();
+      closeAddItemModal();
+      showToast(`Producto agregado por ${newItem.creado_por}`, "fa-check");
+    }
+
+    function openEditItemModal(itemId) {
+      const activeList = getActiveList();
+      const item = activeList && activeList.items.find(i => i.id === itemId);
+      if (!item) return;
+
+      document.getElementById('editItemId').value = item.id;
+      document.getElementById('editItemName').value = item.name;
+
+      const parsed = parseQuantityIntoParts(item.qty);
+      document.getElementById('editItemQuantityNum').value = parsed.num;
+      document.getElementById('editItemUnit').value = parsed.unit;
+      document.getElementById('editItemCategory').value = item.category || 'Otros';
+      document.getElementById('editItemPrice').value = item.price ? Number(item.price) : '';
+
+      const createdSelect = document.getElementById('editItemCreatedBy');
+      const boughtSelect = document.getElementById('editItemBoughtBy');
+      [createdSelect, boughtSelect].forEach(sel => {
+        sel.innerHTML = `
+          <option value="${partnersConfig.p1.name}">${partnersConfig.p1.name}</option>
+          <option value="${partnersConfig.p2.name}">${partnersConfig.p2.name}</option>
+        `;
+      });
+
+      createdSelect.value = item.creado_por || partnersConfig.p1.name;
+      boughtSelect.value = item.comprado_por || getActiveMember().name;
+
+      document.getElementById('editItemModal').classList.remove('hidden');
+    }
+
+    function closeEditItemModal() {
+      document.getElementById('editItemModal').classList.add('hidden');
+    }
+
+    function handleEditItemSubmit(e) {
+      e.preventDefault();
+      const activeList = getActiveList();
+      if (!activeList) return;
+
+      const itemId = document.getElementById('editItemId').value;
+      const item = activeList.items.find(i => i.id === itemId);
+      if (!item) return;
+
+      item.name = document.getElementById('editItemName').value.trim();
+      const num = parseFloat(document.getElementById('editItemQuantityNum').value) || 1;
+      const unit = document.getElementById('editItemUnit').value;
+      item.qty = `${num} ${unit}`;
+      item.category = document.getElementById('editItemCategory').value;
+      
+      const priceVal = parseFloat(document.getElementById('editItemPrice').value);
+      item.price = !isNaN(priceVal) && priceVal > 0 ? priceVal : null;
+      item.creado_por = document.getElementById('editItemCreatedBy').value;
+      item.comprado_por = document.getElementById('editItemBoughtBy').value;
+
+      saveAppState();
+      renderApp();
+      closeEditItemModal();
+      showToast("Producto actualizado", "fa-check");
+    }
+
+    function deleteCurrentEditItem() {
+      const itemId = document.getElementById('editItemId').value;
+      const activeList = getActiveList();
+      if (!activeList) return;
+
+      showConfirmDialog({
+        title: "¿Eliminar producto?",
+        message: "Se quitará este artículo de la lista activa del hogar.",
+        confirmText: "Eliminar",
+        isDanger: true,
+        onConfirm: () => {
+          activeList.items = activeList.items.filter(i => i.id !== itemId);
+          if (supabaseClient && isSupabaseOnline) {
+            supabaseClient.from('items').delete().eq('id', itemId).then(() => {});
+          }
+          saveAppState();
+          renderApp();
+          closeEditItemModal();
+          showToast("Producto eliminado", "fa-trash-can");
+        }
+      });
+    }
+
+    function openListsModal() {
+      renderListsCards();
+      document.getElementById('listsModal').classList.remove('hidden');
+    }
+
+    function closeListsModal() {
+      document.getElementById('listsModal').classList.add('hidden');
+    }
+
+    function setListTimeFilter(range) {
+      activeListTimeFilter = range;
+      document.querySelectorAll('.list-time-btn').forEach(btn => {
+        btn.className = 'list-time-btn px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600';
+      });
+      event.target.className = 'list-time-btn px-2 py-0.5 rounded-lg bg-brand-100 text-brand-800 font-bold';
+      renderListsCards();
+    }
+
+    function renderListsCards() {
+      const root = document.getElementById('listsCardsRoot');
+      root.innerHTML = '';
+
+      const query = (document.getElementById('listSearchInput').value || '').toLowerCase().trim();
+      const now = new Date();
+
+      let filtered = [...appState.lists].filter(list => {
+        const matchesQuery = !query || 
+          (list.title || '').toLowerCase().includes(query) ||
+          (list.date || '').includes(query) ||
+          (list.items && list.items.some(i => i.name.toLowerCase().includes(query)));
+
+        if (!matchesQuery) return false;
+        if (activeListTimeFilter === 'all') return true;
+        const listDate = new Date(list.date || getTodayYMD());
+        const diffDays = (now - listDate) / (1000 * 60 * 60 * 24);
+
+        if (activeListTimeFilter === 'month') return diffDays <= 30;
+        if (activeListTimeFilter === '3months') return diffDays <= 90;
+        if (activeListTimeFilter === '6months') return diffDays <= 180;
+        return true;
+      });
+
+      // Ordenar por fecha cronológica descendente (más recientes arriba)
+      filtered.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+      if (filtered.length === 0) {
+        root.innerHTML = `<div class="py-6 text-center text-xs text-slate-400">No hay listas en este periodo</div>`;
+        return;
+      }
+
+      filtered.forEach(list => {
+        const isActive = list.id === appState.activeListId;
+        const items = list.items || [];
+        const totalItems = items.length;
+        const checked = items.filter(i => i.checked).length;
+        const spent = items.reduce((sum, it) => sum + (it.checked && it.price ? Number(it.price) : 0), 0);
+
+        const card = document.createElement('div');
+        card.className = `p-3 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+          isActive ? 'bg-brand-50 border-brand-300 ring-2 ring-brand-500/20 shadow-sm' : 'bg-white hover:bg-slate-50 border-slate-200'
+        }`;
+
+        card.innerHTML = `
+          <div class="min-w-0 flex-1" onclick="selectActiveList('${list.id}')">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-black text-slate-800 truncate">${list.title || 'Lista de Mercado'}</span>
+              ${isActive ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-brand-600 text-white">Activa</span>' : ''}
+            </div>
+            <div class="flex items-center gap-3 mt-1 text-[11px] text-slate-500">
+              <span class="flex items-center gap-1">
+                <i class="fa-regular fa-calendar text-[10px]"></i> ${list.date || getTodayYMD()}
+              </span>
+              <span>•</span>
+              <span>${checked}/${totalItems} items</span>
+              <span>•</span>
+              <span class="font-bold text-brand-700">S/ ${spent.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1 shrink-0 ml-2">
+            <button 
+              type="button" 
+              onclick="deleteListPrompt('${list.id}', event)" 
+              class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
+        `;
+
+        root.appendChild(card);
+      });
+    }
+
+    function selectActiveList(listId) {
+      appState.activeListId = listId;
+      saveAppState(false);
+      renderApp();
+      closeListsModal();
+      showToast("Lista cargada", "fa-folder-open");
+    }
+
+    function deleteListPrompt(listId, e) {
+      e.stopPropagation();
+      if (appState.lists.length <= 1) {
+        showToast("No puedes eliminar la única lista existente", "fa-triangle-exclamation");
+        return;
+      }
+
+      showConfirmDialog({
+        title: "¿Eliminar lista?",
+        message: "Se eliminará esta lista y todos sus registros en ambos teléfonos.",
+        confirmText: "Eliminar",
+        isDanger: true,
+        onConfirm: async () => {
+          appState.lists = appState.lists.filter(l => l.id !== listId);
+          if (appState.activeListId === listId) appState.activeListId = appState.lists[0].id;
+          if (supabaseClient && isSupabaseOnline) {
+            await supabaseClient.from('listas').delete().eq('id', listId);
+          }
+          saveAppState(true);
+          renderListsCards();
+          renderApp();
+          showToast("Lista eliminada", "fa-trash-can");
+        }
+      });
+    }
+
+    function openCreateNewListModal() {
+      document.getElementById('newListTitleInput').value = 'Mercado ' + getTodayYMD();
+      document.getElementById('newListDateInput').value = getTodayYMD();
+      document.getElementById('createListModal').classList.remove('hidden');
+    }
+
+    function closeCreateNewListModal() {
+      document.getElementById('createListModal').classList.add('hidden');
+    }
+
+    async function confirmCreateNewList() {
+      const title = document.getElementById('newListTitleInput').value.trim() || 'Lista de Mercado';
+      const date = document.getElementById('newListDateInput').value || getTodayYMD();
+
+      const newList = {
+        id: generateUUID(),
+        title: title,
+        date: date,
+        creado_por: getActiveMember().name,
+        items: []
+      };
+
+      appState.lists.unshift(newList);
+      appState.activeListId = newList.id;
+      
+      saveAppState(false);
+      renderApp();
+      closeCreateNewListModal();
+      closeListsModal();
+      showToast("Nueva lista creada", "fa-circle-check");
+
+      // Guardar de inmediato en Supabase
+      if (supabaseClient && isSupabaseOnline) {
+        await uploadSingleListToSupabase(newList);
+      }
+    }
+
+    function openChangeDateModal() {
+      const activeList = getActiveList();
+      if (!activeList) return;
+      document.getElementById('changeDateInput').value = activeList.date || getTodayYMD();
+      document.getElementById('changeDateModal').classList.remove('hidden');
+    }
+
+    function closeChangeDateModal() {
+      document.getElementById('changeDateModal').classList.add('hidden');
+    }
+
+    function confirmChangeDate() {
+      const activeList = getActiveList();
+      if (!activeList) return;
+      const newDate = document.getElementById('changeDateInput').value;
+      if (newDate) {
+        activeList.date = newDate;
+        saveAppState();
+        renderApp();
+        closeChangeDateModal();
+        showToast("Fecha actualizada", "fa-calendar-check");
+      }
+    }
+
+    function openReportsModal() {
+      setReportPeriod('month');
+      document.getElementById('reportsModal').classList.remove('hidden');
+    }
+
+    function closeReportsModal() {
+      document.getElementById('reportsModal').classList.add('hidden');
+    }
+
+    function setReportPeriod(period, evt) {
+      currentReportPeriod = period;
+      document.querySelectorAll('.report-btn').forEach(btn => {
+        btn.className = 'report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-700';
+      });
+      const activeBtn = evt ? evt.target : document.querySelector('.report-btn');
+      if (activeBtn) {
+        activeBtn.className = 'report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-brand-50 border border-brand-200 text-brand-800';
+      }
+      calculateAndRenderReports();
+    }
+
+    function calculateAndRenderReports() {
+      const now = new Date();
+      const filteredLists = appState.lists.filter(l => {
+        if (currentReportPeriod === 'all') return true;
+        const lDate = new Date(l.date || getTodayYMD());
+        const diffDays = (now - lDate) / (1000 * 60 * 60 * 24);
+        if (currentReportPeriod === 'week') return diffDays <= 7;
+        if (currentReportPeriod === 'month') return diffDays <= 30;
+        if (currentReportPeriod === '3months') return diffDays <= 90;
+        if (currentReportPeriod === '6months') return diffDays <= 180;
+        return true;
+      });
+
+      let totalSpent = 0;
+      let totalBoughtItems = 0;
+      const categorySpent = {};
+      const productSpent = {};
+
+      const memberSpent = {
+        [partnersConfig.p1.name]: 0,
+        [partnersConfig.p2.name]: 0
+      };
+      const memberItemsCount = {
+        [partnersConfig.p1.name]: 0,
+        [partnersConfig.p2.name]: 0
+      };
+
+      filteredLists.forEach(l => {
+        (l.items || []).forEach(it => {
+          if (it.checked && it.price && Number(it.price) > 0) {
+            const cost = Number(it.price);
+            totalSpent += cost;
+            totalBoughtItems++;
+
+            const cat = it.category || 'Otros';
+            categorySpent[cat] = (categorySpent[cat] || 0) + cost;
+
+            const pName = it.name.trim();
+            productSpent[pName] = (productSpent[pName] || 0) + cost;
+
+            const buyer = it.comprado_por || it.creado_por || partnersConfig.p1.name;
+            if (buyer.toLowerCase().includes(partnersConfig.p2.name.toLowerCase())) {
+              memberSpent[partnersConfig.p2.name] += cost;
+              memberItemsCount[partnersConfig.p2.name]++;
+            } else {
+              memberSpent[partnersConfig.p1.name] += cost;
+              memberItemsCount[partnersConfig.p1.name]++;
+            }
+          }
+        });
+      });
+
+      const summaryGrid = document.getElementById('reportSummaryGrid');
+      const avgPerShop = filteredLists.length > 0 ? (totalSpent / filteredLists.length) : 0;
+      summaryGrid.innerHTML = `
+        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
+          <span class="text-[10px] text-slate-400 font-bold block">TOTAL HOGAR</span>
+          <span class="text-sm font-black text-brand-700">S/ ${totalSpent.toFixed(2)}</span>
+        </div>
+        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
+          <span class="text-[10px] text-slate-400 font-bold block">COMPRAS</span>
+          <span class="text-sm font-black text-slate-800">${filteredLists.length}</span>
+        </div>
+        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
+          <span class="text-[10px] text-slate-400 font-bold block">PROMEDIO</span>
+          <span class="text-sm font-black text-slate-800">S/ ${avgPerShop.toFixed(2)}</span>
+        </div>
+      `;
+
+      const p1Name = partnersConfig.p1.name;
+      const p2Name = partnersConfig.p2.name;
+      const p1Cost = memberSpent[p1Name] || 0;
+      const p2Cost = memberSpent[p2Name] || 0;
+      const p1Pct = totalSpent > 0 ? Math.round((p1Cost / totalSpent) * 100) : 50;
+      const p2Pct = totalSpent > 0 ? (100 - p1Pct) : 50;
+
+      const partnerCardsRoot = document.getElementById('reportPartnersCards');
+      partnerCardsRoot.innerHTML = `
+        <div class="bg-white p-2.5 rounded-xl border border-emerald-200 shadow-sm">
+          <div class="flex items-center gap-1.5 mb-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+            <span class="text-xs font-bold text-slate-800">${p1Name}</span>
+          </div>
+          <span class="text-base font-black text-emerald-800 block">S/ ${p1Cost.toFixed(2)}</span>
+          <span class="text-[10px] text-slate-400 font-medium">${memberItemsCount[p1Name]} items (${p1Pct}%)</span>
+        </div>
+
+        <div class="bg-white p-2.5 rounded-xl border border-pink-200 shadow-sm">
+          <div class="flex items-center gap-1.5 mb-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-pink-600"></span>
+            <span class="text-xs font-bold text-slate-800">${p2Name}</span>
+          </div>
+          <span class="text-base font-black text-pink-700 block">S/ ${p2Cost.toFixed(2)}</span>
+          <span class="text-[10px] text-slate-400 font-medium">${memberItemsCount[p2Name]} items (${p2Pct}%)</span>
+        </div>
+      `;
+
+      const bar = document.getElementById('reportPartnerRatioBar');
+      bar.innerHTML = `
+        <div class="bg-emerald-600 h-full transition-all duration-300" style="width: ${p1Pct}%" title="${p1Name}: ${p1Pct}%"></div>
+        <div class="bg-pink-600 h-full transition-all duration-300" style="width: ${p2Pct}%" title="${p2Name}: ${p2Pct}%"></div>
+      `;
+
+      const categoryRoot = document.getElementById('reportCategoryBars');
+      categoryRoot.innerHTML = '';
+      const sortedCategories = Object.keys(categorySpent).sort((a, b) => categorySpent[b] - categorySpent[a]);
+
+      if (sortedCategories.length === 0) {
+        categoryRoot.innerHTML = '<p class="text-xs text-slate-400">Sin compras registradas en este periodo.</p>';
+      } else {
+        sortedCategories.forEach(cat => {
+          const amt = categorySpent[cat];
+          const pct = totalSpent > 0 ? Math.round((amt / totalSpent) * 100) : 0;
+          const b = document.createElement('div');
+          b.className = 'space-y-1';
+          b.innerHTML = `
+            <div class="flex justify-between text-xs font-semibold">
+              <span class="text-slate-700">${cat}</span>
+              <span class="text-slate-900 font-bold">S/ ${amt.toFixed(2)} <span class="text-[10px] text-slate-400 font-normal">(${pct}%)</span></span>
+            </div>
+            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+              <div class="h-full bg-brand-500 rounded-full" style="width: ${pct}%"></div>
+            </div>
+          `;
+          categoryRoot.appendChild(b);
+        });
+      }
+
+      const topRoot = document.getElementById('reportTopItems');
+      topRoot.innerHTML = '';
+      const sortedProducts = Object.keys(productSpent).sort((a, b) => productSpent[b] - productSpent[a]).slice(0, 5);
+
+      if (sortedProducts.length > 0) {
+        sortedProducts.forEach((pName, idx) => {
+          const row = document.createElement('div');
+          row.className = 'flex items-center justify-between py-1 border-b border-slate-50';
+          row.innerHTML = `
+            <span class="text-slate-700 font-medium">${idx + 1}. ${pName}</span>
+            <span class="font-extrabold text-slate-900">S/ ${productSpent[pName].toFixed(2)}</span>
+          `;
+          topRoot.appendChild(row);
+        });
+      }
+    }
+
+    function openPriceHistoryModal() {
+      buildProductSelectOptions();
+      document.getElementById('priceHistoryModal').classList.remove('hidden');
+    }
+
+    function closePriceHistoryModal() {
+      document.getElementById('priceHistoryModal').classList.add('hidden');
+    }
+
+    function openItemPriceTrend(productName) {
+      openPriceHistoryModal();
+      const select = document.getElementById('historyProductSelect');
+      select.value = productName;
+      onSelectHistoryProduct(productName);
+    }
+
+    function buildProductSelectOptions() {
+      const select = document.getElementById('historyProductSelect');
+      select.innerHTML = '';
+
+      const productSet = new Set();
+      appState.lists.forEach(l => {
+        (l.items || []).forEach(it => {
+          if (it.name && it.price && Number(it.price) > 0) {
+            productSet.add(it.name.trim());
+          }
+        });
+      });
+
+      const list = Array.from(productSet).sort();
+      if (list.length === 0) {
+        select.innerHTML = '<option value="">Sin productos con precio registrado aún</option>';
+        return;
+      }
+
+      list.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+
+      onSelectHistoryProduct(list[0]);
+    }
+
+    function onSelectHistoryProduct(productName) {
+      if (!productName) return;
+
+      const records = [];
+      appState.lists.forEach(l => {
+        (l.items || []).forEach(it => {
+          if (it.name && it.name.trim().toLowerCase() === productName.toLowerCase() && it.price && Number(it.price) > 0) {
+            const parsed = parseQuantityIntoParts(it.qty);
+            const normalizedBasePrice = Number(it.price) / parsed.baseFactor;
+
+            records.push({
+              date: l.date || getTodayYMD(),
+              paidPrice: Number(it.price),
+              qtyStr: it.qty || '1 unid',
+              normalizedBasePrice: normalizedBasePrice,
+              baseUnit: parsed.baseUnit,
+              buyer: it.comprado_por || it.creado_por || 'Pareja'
+            });
+          }
+        });
+      });
+
+      records.sort((a, b) => new Date(a.date) - new Date(b.date));
+      renderPriceTrendChart(records, productName);
+    }
+
+    function renderPriceTrendChart(records, productName) {
+      const statsGrid = document.getElementById('historyStatsGrid');
+      const tableRoot = document.getElementById('historyTableContainer');
+      tableRoot.innerHTML = '';
+
+      if (records.length === 0) {
+        statsGrid.innerHTML = '';
+        tableRoot.innerHTML = '<p class="p-3 text-slate-400">Sin historial registrado para este producto.</p>';
+        if (priceChartInstance) priceChartInstance.destroy();
+        return;
+      }
+
+      const baseUnit = records[0].baseUnit;
+      const prices = records.map(r => r.normalizedBasePrice);
+      const minP = Math.min(...prices);
+      const maxP = Math.max(...prices);
+      const latest = prices[prices.length - 1];
+      const oldest = prices[0];
+      const variationPct = oldest > 0 ? (((latest - oldest) / oldest) * 100).toFixed(1) : 0;
+
+      statsGrid.innerHTML = `
+        <div class="bg-brand-50 p-2 rounded-xl border border-brand-200 text-center">
+          <span class="text-[9px] text-brand-700 font-bold block uppercase">Último / ${baseUnit}</span>
+          <span class="text-xs font-black text-brand-900">S/ ${latest.toFixed(2)}</span>
+        </div>
+        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-center">
+          <span class="text-[9px] text-slate-500 font-bold block uppercase">Rango</span>
+          <span class="text-xs font-bold text-slate-800">S/ ${minP.toFixed(2)} - ${maxP.toFixed(2)}</span>
+        </div>
+        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-center">
+          <span class="text-[9px] text-slate-500 font-bold block uppercase">Variación</span>
+          <span class="text-xs font-bold ${variationPct > 0 ? 'text-rose-600' : 'text-emerald-600'}">
+            ${variationPct > 0 ? '+' : ''}${variationPct}%
+          </span>
+        </div>
+      `;
+
+      records.slice().reverse().forEach(r => {
+        const row = document.createElement('div');
+        row.className = 'py-2 px-3 flex justify-between items-center';
+        row.innerHTML = `
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-slate-800 block">${r.date}</span>
+              <span class="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-slate-100 text-slate-600">Por ${r.buyer}</span>
+            </div>
+            <span class="text-[10px] text-slate-400">Compró: ${r.qtyStr} por S/ ${r.paidPrice.toFixed(2)}</span>
+          </div>
+          <span class="font-extrabold text-brand-700 text-xs">
+            S/ ${r.normalizedBasePrice.toFixed(2)} / ${r.baseUnit}
+          </span>
+        `;
+        tableRoot.appendChild(row);
+      });
+
+      const ctx = document.getElementById('priceTrendCanvas').getContext('2d');
+      if (priceChartInstance) priceChartInstance.destroy();
+
+      priceChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: records.map(r => r.date),
+          datasets: [{
+            label: `Precio normalizado por ${baseUnit} (S/)`,
+            data: records.map(r => r.normalizedBasePrice.toFixed(2)),
+            borderColor: '#059669',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            fill: true,
+            tension: 0.35,
+            pointRadius: 4,
+            pointBackgroundColor: '#047857'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: false, ticks: { font: { size: 10 } } },
+            x: { ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
+    // ========================================================
+    // MOTOR DE SINCRONIZACIÓN SUPABASE (LOCAL-FIRST TWO-WAY)
+    // ========================================================
+    let syncTimeout = null;
+    let isSyncingInBackground = false;
+    let realtimeDebounceTimer = null;
+
+    function initSupabase() {
+      try {
+        let url = DEFAULT_SUPABASE_URL;
+        let key = DEFAULT_SUPABASE_KEY;
+
+        const savedCfg = localStorage.getItem(SUPABASE_CONFIG_KEY);
+        if (savedCfg) {
+          const cfg = JSON.parse(savedCfg);
+          if (cfg.url && cfg.key) {
+            url = cfg.url;
+            key = cfg.key;
+          }
+        }
+
+        if (url && key && window.supabase) {
+          supabaseClient = window.supabase.createClient(url, key);
+          testSupabaseConnection(false).then(async (online) => {
+            if (online) {
+              setupRealtimeSubscription();
+              // CRUCIAL: Traer las listas de Supabase inmediatamente al iniciar
+              await syncFromSupabase(false);
+            }
+          });
+        }
+      } catch (err) {
+        console.warn("Error iniciando Supabase:", err);
+      }
+    }
+
+    async function testSupabaseConnection(notify = true) {
+      if (!supabaseClient) {
+        updateCloudStatusBadge('disconnected');
+        return false;
+      }
+
+      try {
+        const { error } = await supabaseClient.from('listas').select('id').limit(1);
+        if (error) throw error;
+        isSupabaseOnline = true;
+        updateCloudStatusBadge('connected');
+        if (notify) showToast("Nube conectada", "fa-cloud-check");
+        return true;
+      } catch (err) {
+        isSupabaseOnline = false;
+        updateCloudStatusBadge('disconnected');
+        return false;
+      }
+    }
+
+    // DESCARGA Y RECONCILIACIÓN BIDIRECCIONAL COMPLETA
+    async function syncFromSupabase(notify = false) {
+      if (!supabaseClient || isPerformingLocalPush) return;
+
+      try {
+        updateCloudStatusBadge('syncing');
+
+        // Traer listas ordenadas con sus items anidados mediante foreign key
+        let remoteLists = [];
+        const { data: joinData, error: joinErr } = await supabaseClient
+          .from('listas')
+          .select(`
+            id,
+            titulo,
+            fecha,
+            creado_por,
+            created_at,
+            items (
+              id,
+              nombre,
+              cantidad_str,
+              cantidad_num,
+              unidad,
+              precio,
+              tachado,
+              categoria,
+              creado_por,
+              comprado_por
+            )
+          `)
+          .order('fecha', { ascending: false });
+
+        if (!joinErr && joinData && joinData.length > 0) {
+          remoteLists = joinData;
+        } else {
+          // Consulta de respaldo si la relación anidada no estuviera cacheada
+          const { data: lData } = await supabaseClient.from('listas').select('*').order('fecha', { ascending: false });
+          const { data: iData } = await supabaseClient.from('items').select('*');
+          if (lData && lData.length > 0) {
+            remoteLists = lData.map(l => ({
+              ...l,
+              items: (iData || []).filter(it => it.lista_id === l.id)
+            }));
+          }
+        }
+
+        if (remoteLists && remoteLists.length > 0) {
+          const reconstructedLists = remoteLists.map(rl => ({
+            id: rl.id,
+            title: rl.titulo || 'Lista de Mercado',
+            date: rl.fecha || getTodayYMD(),
+            creado_por: rl.creado_por || partnersConfig.p1.name,
+            items: (rl.items || []).map(it => ({
+              id: it.id,
+              name: it.nombre,
+              qty: it.cantidad_str || `${it.cantidad_num || 1} ${it.unidad || 'unid'}`,
+              category: it.categoria || 'Otros',
+              checked: !!it.tachado,
+              price: it.precio ? Number(it.precio) : null,
+              creado_por: it.creado_por || partnersConfig.p1.name,
+              comprado_por: it.comprado_por || null
+            }))
+          }));
+
+          // Reconciliar: no eliminar listas locales que estén pendientes de subir
+          const remoteIds = new Set(reconstructedLists.map(l => l.id));
+          const localOnlyLists = appState.lists.filter(l => !remoteIds.has(l.id));
+
+          appState.lists = [...reconstructedLists, ...localOnlyLists];
+
+          // Mantener la lista activa actual si existe; si no, activar la primera (más reciente)
+          if (!appState.activeListId || !appState.lists.some(l => l.id === appState.activeListId)) {
+            appState.activeListId = appState.lists[0].id;
+          }
+
+          saveAppState(false);
+          renderApp();
+          updateCloudStatusBadge('connected');
+          if (notify) showToast("Listas sincronizadas con la nube", "fa-cloud-arrow-down");
+        } else if (appState.lists && appState.lists.length > 0) {
+          // Si Supabase estuviera vacío pero tenemos datos locales, subirlos
+          triggerBackgroundSync();
+        }
+      } catch (e) {
+        console.warn("Fallo sincronizando desde Supabase:", e);
+        updateCloudStatusBadge('connected');
+      }
+    }
+
+    function setupRealtimeSubscription() {
+      if (!supabaseClient || realtimeChannel) return;
+
+      try {
+        realtimeChannel = supabaseClient
+          .channel('cambios-hogar')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, () => {
+            if (!isPerformingLocalPush) {
+              if (realtimeDebounceTimer) clearTimeout(realtimeDebounceTimer);
+              realtimeDebounceTimer = setTimeout(() => {
+                syncFromSupabase(false);
+              }, 600);
+            }
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'listas' }, () => {
+            if (!isPerformingLocalPush) {
+              if (realtimeDebounceTimer) clearTimeout(realtimeDebounceTimer);
+              realtimeDebounceTimer = setTimeout(() => {
+                syncFromSupabase(false);
+              }, 600);
+            }
+          })
+          .subscribe();
+      } catch (e) {
+        console.warn("Fallo suscribiendo a Realtime:", e);
+      }
+    }
+
+    function updateCloudStatusBadge(status) {
+      const dot = document.getElementById('cloudStatusDot');
+      const pill = document.getElementById('cloudStatusBadgePill');
+
+      if (status === 'connected') {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+        pill.textContent = 'En vivo (Tiempo Real)';
+        pill.className = 'text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-200 text-emerald-900';
+      } else if (status === 'syncing') {
+        dot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-ping';
+        pill.textContent = 'Guardando...';
+        pill.className = 'text-[10px] font-bold px-2 py-1 rounded-full bg-amber-200 text-amber-900';
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-slate-400';
+        pill.textContent = 'Sin Conexión';
+        pill.className = 'text-[10px] font-bold px-2 py-1 rounded-full bg-slate-200 text-slate-700';
+      }
+    }
+
+    // Subida atómica de una sola lista (garantiza que al escanear quede guardada al 100%)
+    async function uploadSingleListToSupabase(list) {
+      if (!supabaseClient || !isSupabaseOnline) return;
+
+      try {
+        isPerformingLocalPush = true;
+        updateCloudStatusBadge('syncing');
+
+        if (!isValidUUID(list.id)) list.id = generateUUID();
+
+        await supabaseClient.from('listas').upsert({
+          id: list.id,
+          titulo: list.title || 'Lista de Mercado',
+          fecha: list.date || getTodayYMD(),
+          creado_por: list.creado_por || partnersConfig.p1.name
+        }, { onConflict: 'id' });
+
+        if (list.items && list.items.length > 0) {
+          const payload = list.items.map(it => {
+            const parsed = parseQuantityIntoParts(it.qty);
+            if (!isValidUUID(it.id)) it.id = generateUUID();
+            return {
+              id: it.id,
+              lista_id: list.id,
+              nombre: it.name,
+              cantidad_str: it.qty || '1 unid',
+              cantidad_num: parsed.num,
+              unidad: parsed.unit,
+              precio: it.price && Number(it.price) > 0 ? Number(it.price) : null,
+              tachado: !!it.checked,
+              categoria: it.category || 'Otros',
+              creado_por: it.creado_por || partnersConfig.p1.name,
+              comprado_por: it.comprado_por || null
+            };
+          });
+
+          await supabaseClient.from('items').upsert(payload, { onConflict: 'id' });
+        }
+
+        updateCloudStatusBadge('connected');
+      } catch (e) {
+        console.warn("Fallo subiendo lista:", e);
+      } finally {
+        setTimeout(() => {
+          isPerformingLocalPush = false;
+        }, 1000);
+      }
+    }
+
+    function triggerBackgroundSync() {
+      if (!supabaseClient || !isSupabaseOnline) return;
+
+      if (syncTimeout) clearTimeout(syncTimeout);
+      updateCloudStatusBadge('syncing');
+
+      syncTimeout = setTimeout(async () => {
+        if (isSyncingInBackground) return;
+        isSyncingInBackground = true;
+        isPerformingLocalPush = true;
+
+        try {
+          for (const list of appState.lists) {
+            await uploadSingleListToSupabase(list);
+          }
+          updateCloudStatusBadge('connected');
+        } catch (err) {
+          updateCloudStatusBadge('connected');
+        } finally {
+          isSyncingInBackground = false;
+          setTimeout(() => {
+            isPerformingLocalPush = false;
+          }, 800);
+        }
+      }, 1000);
+    }
+
+    function openCloudModal() {
+      document.getElementById('cloudModal').classList.remove('hidden');
+    }
+
+    function closeCloudModal() {
+      document.getElementById('cloudModal').classList.add('hidden');
+    }
+
+    function exportLocalBackupFile() {
+      try {
+        const payload = {
+          version: '3.6-hogar',
+          exportedAt: new Date().toISOString(),
+          partnersConfig: partnersConfig,
+          appState: appState
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mercado_hogar_${getTodayYMD()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("Copia de seguridad descargada", "fa-file-shield");
+      } catch (err) {
+        showToast("Error al exportar", "fa-triangle-exclamation");
+      }
+    }
+
+    function importLocalBackupFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          const importedState = parsed.appState || parsed;
+          if (!importedState.lists || !Array.isArray(importedState.lists)) {
+            showToast("Archivo inválido", "fa-triangle-exclamation");
+            return;
+          }
+
+          showConfirmDialog({
+            title: "¿Importar copia de respaldo?",
+            message: `El archivo contiene ${importedState.lists.length} listas. Actualizará los datos del hogar.`,
+            confirmText: "Restaurar",
+            isDanger: false,
+            onConfirm: () => {
+              appState = importedState;
+              if (parsed.partnersConfig) partnersConfig = parsed.partnersConfig;
+              saveAppState(true);
+              savePartnersConfig();
+              renderApp();
+              showToast("Respaldo restaurado con éxito", "fa-circle-check");
+            }
+          });
+        } catch (err) {
+          showToast("Archivo inválido", "fa-triangle-exclamation");
+        } finally {
+          event.target.value = '';
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function sharePendingListWhatsApp() {
+      const activeList = getActiveList();
+      if (!activeList) return;
+
+      const pending = (activeList.items || []).filter(i => !i.checked);
+      if (pending.length === 0) {
+        showToast("¡Ya compraron todo!", "fa-basket-shopping");
+        return;
+      }
+
+      let text = `🛒 *Lista de Compras del Hogar (${activeList.title || 'Mercado'})*\n`;
+      text += `📅 Fecha: ${activeList.date || getTodayYMD()}\n\n`;
+
+      const grouped = {};
+      pending.forEach(i => {
+        const cat = i.category || 'Otros';
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(i);
+      });
+
+      Object.keys(grouped).forEach(cat => {
+        text += `*${cat}:*\n`;
+        grouped[cat].forEach(i => {
+          text += `  • ${i.name} (${i.qty || '1 unid'}) - _pidió ${i.creado_por || 'Yo'}_\n`;
+        });
+        text += `\n`;
+      });
+
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
+    }
+
+    function showConfirmDialog({ title, message, confirmText, isDanger, onConfirm }) {
+      const modal = document.getElementById('confirmDialogModal');
+      const titleEl = document.getElementById('confirmDialogTitle');
+      const msgEl = document.getElementById('confirmDialogMessage');
+      const confirmBtn = document.getElementById('confirmDialogConfirmBtn');
+      const cancelBtn = document.getElementById('confirmDialogCancelBtn');
+      const iconBox = document.getElementById('confirmDialogIcon');
+
+      titleEl.textContent = title;
+      msgEl.textContent = message;
+      confirmBtn.textContent = confirmText || 'Confirmar';
+
+      if (isDanger) {
+        confirmBtn.className = 'flex-1 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700';
+        iconBox.className = 'w-12 h-12 mx-auto rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center text-lg';
+      } else {
+        confirmBtn.className = 'flex-1 py-2 rounded-xl bg-brand-600 text-white font-bold text-xs hover:bg-brand-700';
+        iconBox.className = 'w-12 h-12 mx-auto rounded-2xl bg-brand-50 text-brand-600 border border-brand-200 flex items-center justify-center text-lg';
+      }
+
+      function cleanListeners() {
+        confirmBtn.onclick = null;
+        cancelBtn.onclick = null;
+        modal.classList.add('hidden');
+      }
+
+      cancelBtn.onclick = () => cleanListeners();
+      confirmBtn.onclick = () => {
+        cleanListeners();
+        if (typeof onConfirm === 'function') onConfirm();
+      };
+
+      modal.classList.remove('hidden');
+    }
+
+    function showToast(message, iconClass = 'fa-circle-check') {
+      const toast = document.getElementById('toastNotification');
+      const msg = document.getElementById('toastMsg');
+      const icon = document.getElementById('toastIcon');
+
+      msg.textContent = message;
+      icon.className = `fa-solid ${iconClass} text-brand-400`;
+
+      toast.classList.remove('opacity-0', '-translate-y-4', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', '-translate-y-4', 'pointer-events-none');
+      }, 2400);
+    }
+
+    function onSearchChange(e) {
+      searchQuery = e.target.value;
+      const clearBtn = document.getElementById('clearSearchBtn');
+      if (searchQuery) clearBtn.classList.remove('hidden');
+      else clearBtn.classList.add('hidden');
+      renderApp();
+    }
+
+    function clearSearch() {
+      searchQuery = '';
+      document.getElementById('searchInput').value = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      renderApp();
+    }
+
+    // ========================================================
+    // MODAL DE ESCANEO DE LISTAS Y BOLETAS (IA)
+    // ========================================================
+    function loadAIConfig() {
+      try {
+        const raw = localStorage.getItem(AI_CONFIG_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          aiConfig = { ...aiConfig, ...parsed };
+        }
+      } catch (e) {}
+      updateAIStatusBannerUI();
+    }
+
+    function saveAIConfig() {
+      try {
+        localStorage.setItem(AI_CONFIG_KEY, JSON.stringify(aiConfig));
+      } catch (e) {}
+      updateAIStatusBannerUI();
+    }
+
+    function updateAIStatusBannerUI() {
+      const label = document.getElementById('aiStatusLabel');
+      if (!label) return;
+
+      if (aiConfig.mode === 'direct_key') {
+        const hasKey = !!aiConfig.apiKey && aiConfig.apiKey.trim().length > 10;
+        label.innerHTML = hasKey 
+          ? `<i class="fa-solid fa-circle-check text-emerald-500"></i> <span>Clave privada lista</span>`
+          : `<i class="fa-solid fa-triangle-exclamation text-amber-500"></i> <span class="text-amber-800 font-bold">Falta ingresar API Key</span>`;
+      } else {
+        label.innerHTML = `<i class="fa-solid fa-cloud-bolt text-teal-600"></i> <span>Proxy Supabase</span>`;
+      }
+    }
+
+    function openAISettingsModal() {
+      loadAIConfig();
+      const directRadio = document.querySelector('input[name="aiOperationMode"][value="direct_key"]');
+      const proxyRadio = document.querySelector('input[name="aiOperationMode"][value="backend_proxy"]');
+      
+      if (aiConfig.mode === 'backend_proxy' && proxyRadio) proxyRadio.checked = true;
+      else if (directRadio) directRadio.checked = true;
+
+      document.getElementById('geminiApiKeyInput').value = aiConfig.apiKey || '';
+      document.getElementById('aiProxyUrlInput').value = aiConfig.proxyUrl || '';
+
+      toggleAIModeFields();
+      document.getElementById('aiSettingsModal').classList.remove('hidden');
+    }
+
+    function closeAISettingsModal() {
+      document.getElementById('aiSettingsModal').classList.add('hidden');
+    }
+
+    function toggleAIModeFields() {
+      const selected = document.querySelector('input[name="aiOperationMode"]:checked')?.value || 'direct_key';
+      const directFields = document.getElementById('aiDirectKeyFields');
+      const proxyFields = document.getElementById('aiBackendProxyFields');
+
+      if (selected === 'direct_key') {
+        directFields.classList.remove('hidden');
+        proxyFields.classList.add('hidden');
+      } else {
+        directFields.classList.add('hidden');
+        proxyFields.classList.remove('hidden');
+      }
+    }
+
+    function saveAISettings() {
+      const mode = document.querySelector('input[name="aiOperationMode"]:checked')?.value || 'direct_key';
+      const key = document.getElementById('geminiApiKeyInput').value.trim();
+      const proxy = document.getElementById('aiProxyUrlInput').value.trim();
+
+      aiConfig.mode = mode;
+      aiConfig.apiKey = key;
+      if (proxy) aiConfig.proxyUrl = proxy;
+
+      saveAIConfig();
+      closeAISettingsModal();
+      showToast("Configuración de IA guardada", "fa-check");
+    }
+
+    function setScanType(type) {
+      currentScanType = type;
+      const listBtn = document.getElementById('scanTabListBtn');
+      const receiptBtn = document.getElementById('scanTabReceiptBtn');
+      const heading = document.getElementById('scanUploadHeading');
+      const subHeading = document.getElementById('scanUploadSubheading');
+      const uploadIcon = document.getElementById('scanUploadIcon');
+      const modalSubtitle = document.getElementById('scanModalSubtitle');
+
+      if (type === 'receipt') {
+        receiptBtn.className = 'py-2 px-3 rounded-xl font-bold transition flex items-center justify-center gap-1.5 bg-white text-slate-800 shadow-xs';
+        listBtn.className = 'py-2 px-3 rounded-xl font-bold transition flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-800';
+        heading.textContent = 'Sube una foto de tu boleta o ticket';
+        subHeading.textContent = 'Metro, Plaza Vea, Tottus, Wong, Makro, Tambo o minimarkets';
+        uploadIcon.className = 'fa-solid fa-receipt text-amber-600';
+        modalSubtitle.textContent = 'Lee boletas impresas, extrae precios pagados y calcula totales';
+      } else {
+        listBtn.className = 'py-2 px-3 rounded-xl font-bold transition flex items-center justify-center gap-1.5 bg-white text-slate-800 shadow-xs';
+        receiptBtn.className = 'py-2 px-3 rounded-xl font-bold transition flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-800';
+        heading.textContent = 'Sube una foto de tu lista de compras';
+        subHeading.textContent = 'Notas manuscritas en cuaderno o capturas de WhatsApp';
+        uploadIcon.className = 'fa-solid fa-camera text-brand-600';
+        modalSubtitle.textContent = 'Transcribe fotos de cuadernos o capturas de notas';
+      }
+    }
+
+    function openScanModal() {
+      resetScanModal();
+      loadAIConfig();
+      setScanType(currentScanType || 'list');
+      document.getElementById('scanNewListDate').value = getTodayYMD();
+      scanSelectedBuyer = getActiveMember().name;
+      renderScanBuyerPills();
+      document.getElementById('scanModal').classList.remove('hidden');
+    }
+
+    function renderScanBuyerPills() {
+      const container = document.getElementById('scanBuyerPills');
+      if (!container) return;
+      const p1 = partnersConfig.p1.name;
+      const p2 = partnersConfig.p2.name;
+      container.innerHTML = `
+        <button type="button" onclick="setScanBuyer('${p1}')" class="px-2.5 py-1 rounded-lg text-xs font-bold border transition ${
+          scanSelectedBuyer === p1 ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-white border-slate-200 text-slate-700'
+        }">${p1}</button>
+        <button type="button" onclick="setScanBuyer('${p2}')" class="px-2.5 py-1 rounded-lg text-xs font-bold border transition ${
+          scanSelectedBuyer === p2 ? 'bg-pink-600 text-white border-pink-600 shadow-xs' : 'bg-white border-slate-200 text-slate-700'
+        }">${p2}</button>
+      `;
+    }
+
+    function setScanBuyer(name) {
+      scanSelectedBuyer = name;
+      renderScanBuyerPills();
+    }
+
+    function closeScanModal() {
+      document.getElementById('scanModal').classList.add('hidden');
+    }
+
+    function resetScanModal() {
+      detectedScannedItems = [];
+      detectedReceiptMeta = { store: '', date: '', total: null };
+      pendingScanBase64 = null;
+      document.getElementById('scanUploadStep').classList.remove('hidden');
+      document.getElementById('scanLoadingStep').classList.add('hidden');
+      document.getElementById('scanReviewStep').classList.add('hidden');
+      document.getElementById('receiptSummaryCard').classList.add('hidden');
+      document.getElementById('scanFileInput').value = '';
+    }
+
+    function triggerFileSelect() {
+      document.getElementById('scanFileInput').click();
+    }
+
+    function triggerCameraCapture() {
+      const input = document.getElementById('scanFileInput');
+      input.setAttribute('capture', 'environment');
+      input.click();
+    }
+
+    function handleImageSelected(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const fullDataUrl = evt.target.result;
+        const base64Data = fullDataUrl.split(',')[1];
+        const mimeType = file.type || 'image/jpeg';
+
+        pendingScanBase64 = base64Data;
+        document.getElementById('scanImageThumbnail').src = fullDataUrl;
+        document.getElementById('scanUploadStep').classList.add('hidden');
+        document.getElementById('scanLoadingStep').classList.remove('hidden');
+
+        if (currentScanType === 'receipt') {
+          document.getElementById('scanLoadingTitle').textContent = 'Leyendo boleta y calculando precios...';
+          document.getElementById('scanLoadingDesc').textContent = 'Identificando tienda, desglosando productos, cantidades y montos pagados';
+        } else {
+          document.getElementById('scanLoadingTitle').textContent = 'Analizando y categorizando lista...';
+          document.getElementById('scanLoadingDesc').textContent = 'Leyendo letra manuscrita, extrayendo unidades y clasificando ingredientes';
+        }
+
+        processImageWithGemini(base64Data, mimeType);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    const AIService = {
+      async extractItemsFromImage(base64Data, mimeType, scanType = 'list') {
+        if (aiConfig.mode === 'direct_key') {
+          return await this.callGeminiDirect(base64Data, mimeType, scanType);
+        } else {
+          return await this.callSupabaseProxy(base64Data, mimeType, scanType);
+        }
+      },
+
+      async callGeminiDirect(base64Data, mimeType, scanType) {
+        let key = aiConfig.apiKey ? aiConfig.apiKey.trim() : '';
+
+        if (!key) {
+          openAISettingsModal();
+          throw new Error("Por favor ingresa tu API Key de Google Gemini para escanear.");
+        }
+
+        let prompt = '';
+        let responseSchema = {};
+
+        if (scanType === 'receipt') {
+          prompt = `Analiza la imagen adjunta que corresponde a una boleta, ticket de compra o comprobante de pago de supermercado/mercado (ej: Metro, Plaza Vea, Wong, Tottus, Vivanda, Makro, Tambo, Mass, etc.).
+Extrae con alta precisión:
+1. store_name: nombre del supermercado o comercio identificado (ej: 'Plaza Vea', 'Metro', 'Wong', 'Tottus'). Si no está claro, pon 'Supermercado'.
+2. ticket_date: fecha de emisión impresa en formato YYYY-MM-DD si es legible, o null si no se distingue.
+3. total_receipt: monto total impreso al final del ticket como número decimal, o null.
+4. items: lista de todos los productos comprados. Expande abreviaturas comunes de boletas a nombres limpios (ej: 'LECH GLOR EVAP 400G' -> 'Leche Gloria Evaporada', 'PAP BLANC BOL' -> 'Papa Blanca').
+Para cada producto indica:
+- name: nombre legible y limpio del producto.
+- cantidad_num: cantidad o peso facturado (ej: 1, 2, 0.745, etc.).
+- unidad: 'kg', 'gr', 'unid', 'lt', 'ml', 'paquete', 'lata', 'frasco', 'sobre', 'atado'.
+- categoria: 'Carnes y Aves', 'Verduras y Tubérculos', 'Frutas', 'Especias y Condimentos', 'Abarrotes y Despensa', 'Hogar y Limpieza', 'Lácteos y Huevos', 'Otros'.
+- precio: monto total pagado en Soles por ese producto o línea de la boleta.
+
+Devuelve estrictamente un objeto JSON estructurado según el esquema.`;
+
+          responseSchema = {
+            type: "OBJECT",
+            properties: {
+              "store_name": { "type": "STRING" },
+              "ticket_date": { "type": "STRING" },
+              "total_receipt": { "type": "NUMBER" },
+              "items": {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    "name": { "type": "STRING" },
+                    "cantidad_num": { "type": "NUMBER" },
+                    "unidad": { "type": "STRING" },
+                    "categoria": { "type": "STRING" },
+                    "precio": { "type": "NUMBER" }
+                  },
+                  propertyOrdering: ["name", "cantidad_num", "unidad", "categoria", "precio"]
+                }
+              }
+            },
+            propertyOrdering: ["store_name", "ticket_date", "total_receipt", "items"]
+          };
+        } else {
+          prompt = `Analiza la imagen adjunta que contiene una lista de compras de mercado (puede ser escrita a mano en un cuaderno o captura de pantalla de notas/WhatsApp).
+Extrae todos los productos listados.
+Para cada producto identifica:
+- name: nombre claro del producto (ej: "Pechuga de pollo", "Tomate", "Milanesas").
+- cantidad_num: número de la cantidad (ej: 0.5 para 1/2 kg, 0.25 para 1/4 kg, 1, 2, 4, etc.). Si no especifica número, asigna 1.
+- unidad: una de las siguientes opciones exactas: "kg", "gr", "unid", "lt", "ml", "atado", "frasco", "lata", "paquete", "sobre". Si es una pieza o no tiene unidad explícita, usa "unid".
+- categoria: una de las siguientes categorías exactas:
+  * "Carnes y Aves"
+  * "Verduras y Tubérculos"
+  * "Frutas"
+  * "Especias y Condimentos"
+  * "Abarrotes y Despensa"
+  * "Hogar y Limpieza"
+  * "Lácteos y Huevos"
+  * "Otros"
+- precio: si en la foto aparece un precio al lado del producto pon el número como decimal, si no aparece pon null.
+
+Devuelve estrictamente un arreglo JSON de objetos con estos campos.`;
+
+          responseSchema = {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                "name": { "type": "STRING" },
+                "cantidad_num": { "type": "NUMBER" },
+                "unidad": { "type": "STRING" },
+                "categoria": { "type": "STRING" },
+                "precio": { "type": "NUMBER" }
+              },
+              propertyOrdering: ["name", "cantidad_num", "unidad", "categoria", "precio"]
+            }
+          };
+        }
+
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${key}`;
+
+        const payload = {
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: prompt },
+                {
+                  inlineData: {
+                    mimeType: mimeType,
+                    data: base64Data
+                  }
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: responseSchema
+          }
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData?.error?.message || `HTTP ${response.status}`);
+        }
+
+        const result = await response.json();
+        const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!jsonText) throw new Error("Respuesta vacía del modelo de visión.");
+        return JSON.parse(jsonText);
+      },
+
+      async callSupabaseProxy(base64Data, mimeType, scanType) {
+        const proxyUrl = aiConfig.proxyUrl;
+        const response = await fetch(proxyUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': DEFAULT_SUPABASE_KEY,
+            'Authorization': `Bearer ${DEFAULT_SUPABASE_KEY}`
+          },
+          body: JSON.stringify({
+            image_base64: base64Data,
+            mime_type: mimeType,
+            scan_type: scanType
+          })
+        });
+
+        if (!response.ok) {
+          const errBody = await response.json().catch(() => ({}));
+          throw new Error(errBody.error || `Error en servidor proxy: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.items || data;
+      }
+    };
+
+    async function processImageWithGemini(base64Data, mimeType) {
+      try {
+        const parsed = await AIService.extractItemsFromImage(base64Data, mimeType, currentScanType);
+
+        let itemsArray = [];
+
+        if (currentScanType === 'receipt') {
+          if (parsed && typeof parsed === 'object' && Array.isArray(parsed.items)) {
+            itemsArray = parsed.items;
+            detectedReceiptMeta = {
+              store: parsed.store_name || 'Supermercado',
+              date: parsed.ticket_date || getTodayYMD(),
+              total: parsed.total_receipt ? Number(parsed.total_receipt) : null
+            };
+          } else if (Array.isArray(parsed)) {
+            itemsArray = parsed;
+          }
+        } else {
+          itemsArray = Array.isArray(parsed) ? parsed : (parsed.items || []);
+        }
+
+        if (!Array.isArray(itemsArray) || itemsArray.length === 0) {
+          throw new Error("No se detectaron productos legibles en el documento.");
+        }
+
+        detectedScannedItems = itemsArray.map((item, idx) => ({
+          tempId: 'scan_' + Date.now() + '_' + idx,
+          selected: true,
+          name: (item.name || 'Producto').trim(),
+          cantidad_num: Number(item.cantidad_num) > 0 ? Number(item.cantidad_num) : 1,
+          unidad: item.unidad || 'unid',
+          categoria: item.categoria || 'Otros',
+          precio: item.precio && Number(item.precio) > 0 ? Number(item.precio) : null,
+          alreadyBought: currentScanType === 'receipt'
+        }));
+
+        renderScannedItemsReview();
+      } catch (err) {
+        console.warn("Fallo procesando imagen con IA:", err);
+        showToast(err.message || "No se pudo leer la imagen automáticamente.", "fa-triangle-exclamation");
+        resetScanModal();
+      }
+    }
+
+    function renderScannedItemsReview() {
+      document.getElementById('scanLoadingStep').classList.add('hidden');
+      document.getElementById('scanReviewStep').classList.remove('hidden');
+
+      const receiptCard = document.getElementById('receiptSummaryCard');
+      const newListTitleInput = document.getElementById('scanNewListTitle');
+      const newListDateInput = document.getElementById('scanNewListDate');
+
+      if (currentScanType === 'receipt') {
+        receiptCard.classList.remove('hidden');
+        document.getElementById('receiptStoreBadge').textContent = detectedReceiptMeta.store || 'Supermercado';
+        document.getElementById('receiptDateBadge').textContent = detectedReceiptMeta.date || getTodayYMD();
+
+        const calculatedSum = detectedScannedItems.reduce((acc, it) => acc + (it.selected && it.precio ? Number(it.precio) : 0), 0);
+        document.getElementById('receiptCalculatedTotal').textContent = `S/ ${calculatedSum.toFixed(2)}`;
+        document.getElementById('receiptPrintedTotal').textContent = detectedReceiptMeta.total ? `S/ ${detectedReceiptMeta.total.toFixed(2)}` : 'No detectado';
+
+        newListTitleInput.value = `Boleta ${detectedReceiptMeta.store || 'Supermercado'}`;
+        if (detectedReceiptMeta.date) newListDateInput.value = detectedReceiptMeta.date;
+        document.getElementById('scanDestNewOptionLabel').textContent = 'Nueva Lista (Comprada)';
+      } else {
+        receiptCard.classList.add('hidden');
+        newListTitleInput.value = 'Mercado Escaneado';
+        document.getElementById('scanDestNewOptionLabel').textContent = 'Nueva Lista';
+      }
+
+      const select = document.getElementById('scanTargetListSelect');
+      select.innerHTML = '';
+      appState.lists.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l.id;
+        opt.textContent = `${l.title || 'Lista'} (${l.date || getTodayYMD()})`;
+        if (l.id === appState.activeListId) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      renderScannedItemsRows();
+    }
+
+    function renderScannedItemsRows() {
+      const container = document.getElementById('scannedItemsListContainer');
+      container.innerHTML = '';
+      document.getElementById('scannedItemsCount').textContent = detectedScannedItems.filter(i => i.selected).length;
+
+      detectedScannedItems.forEach((item, index) => {
+        const row = document.createElement('div');
+        row.className = `p-2 rounded-xl border flex flex-col gap-1.5 transition ${
+          item.selected ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-50 border-slate-100 opacity-50'
+        }`;
+
+        row.innerHTML = `
+          <div class="flex items-center gap-2">
+            <input 
+              type="checkbox" 
+              ${item.selected ? 'checked' : ''} 
+              onchange="toggleScannedItemSelection(${index}, this.checked)"
+              class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+            
+            <input 
+              type="text" 
+              value="${item.name}" 
+              onchange="updateScannedItemField(${index}, 'name', this.value)"
+              class="flex-1 text-xs font-bold text-slate-800 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-brand-500 focus:outline-none">
+            
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200">
+              ${item.categoria}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2 pl-6 text-xs">
+            <div class="flex items-center gap-1">
+              <span class="text-[10px] text-slate-400">Cant:</span>
+              <input 
+                type="number" 
+                step="any"
+                min="0.01" 
+                value="${item.cantidad_num}" 
+                onchange="updateScannedItemField(${index}, 'cantidad_num', parseFloat(this.value))"
+                class="w-14 px-1.5 py-0.5 text-xs font-semibold rounded bg-slate-50 border border-slate-200 text-center">
+            </div>
+
+            <div class="flex items-center gap-1">
+              <span class="text-[10px] text-slate-400">Unid:</span>
+              <select 
+                onchange="updateScannedItemField(${index}, 'unidad', this.value)"
+                class="px-1.5 py-0.5 text-xs rounded bg-slate-50 border border-slate-200 font-semibold">
+                ${['kg', 'gr', 'unid', 'lt', 'ml', 'atado', 'frasco', 'lata', 'paquete', 'sobre'].map(u => 
+                  `<option value="${u}" ${item.unidad === u ? 'selected' : ''}>${u}</option>`
+                ).join('')}
+              </select>
+            </div>
+
+            <div class="flex items-center gap-1 ml-auto">
+              <span class="text-[10px] font-bold ${currentScanType === 'receipt' ? 'text-amber-700' : 'text-slate-400'}">S/:</span>
+              <input 
+                type="number" 
+                step="0.05"
+                min="0" 
+                placeholder="-" 
+                value="${item.precio !== null ? item.precio : ''}" 
+                onchange="updateScannedItemField(${index}, 'precio', parseFloat(this.value) || null)"
+                class="w-16 px-1.5 py-0.5 text-xs font-bold rounded ${currentScanType === 'receipt' ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-slate-50 border-slate-200'} text-center">
+            </div>
+          </div>
+        `;
+
+        container.appendChild(row);
+      });
+    }
+
+    function toggleScannedItemSelection(idx, val) {
+      if (detectedScannedItems[idx]) {
+        detectedScannedItems[idx].selected = val;
+        renderScannedItemsRows();
+      }
+    }
+
+    function updateScannedItemField(idx, field, val) {
+      if (detectedScannedItems[idx]) {
+        detectedScannedItems[idx][field] = val;
+      }
+    }
+
+    function toggleSelectAllScanned() {
+      const anyUnselected = detectedScannedItems.some(i => !i.selected);
+      detectedScannedItems.forEach(i => i.selected = anyUnselected);
+      renderScannedItemsRows();
+    }
+
+    function toggleScanDestinationUI() {
+      const isNew = document.querySelector('input[name="scanDestination"]:checked').value === 'new';
+      document.getElementById('scanNewListFields').classList.toggle('hidden', !isNew);
+      document.getElementById('scanAppendFields').classList.toggle('hidden', isNew);
+    }
+
+    // APLICAR PRODUCTOS ESCANEADOS (Con guardado inmediato y atómico)
+    async function applyScannedItemsToApp() {
+      const selected = detectedScannedItems.filter(i => i.selected && i.name.trim().length > 0);
+      if (selected.length === 0) {
+        showToast("Selecciona al menos un producto para guardar", "fa-triangle-exclamation");
+        return;
+      }
+
+      const activeMember = scanSelectedBuyer || getActiveMember().name;
+      const isNew = document.querySelector('input[name="scanDestination"]:checked').value === 'new';
+      const isReceipt = currentScanType === 'receipt';
+
+      const convertedItems = selected.map(item => ({
+        id: generateUUID(),
+        name: item.name.trim(),
+        qty: `${item.cantidad_num} ${item.unidad}`,
+        category: item.categoria || 'Otros',
+        checked: isReceipt ? true : false,
+        price: item.precio !== null && item.precio > 0 ? Number(item.precio) : null,
+        creado_por: activeMember,
+        comprado_por: isReceipt ? activeMember : null
+      }));
+
+      let targetList = null;
+
+      if (isNew) {
+        const title = document.getElementById('scanNewListTitle').value.trim() || (isReceipt ? `Boleta ${detectedReceiptMeta.store || 'Supermercado'}` : 'Mercado Escaneado');
+        const date = document.getElementById('scanNewListDate').value || (isReceipt && detectedReceiptMeta.date ? detectedReceiptMeta.date : getTodayYMD());
+
+        const newList = {
+          id: generateUUID(),
+          title: title,
+          date: date,
+          creado_por: activeMember,
+          items: convertedItems
+        };
+
+        appState.lists.unshift(newList);
+        appState.activeListId = newList.id;
+        targetList = newList;
+        showToast(`Lista "${title}" registrada con ${convertedItems.length} compras`, "fa-receipt");
+      } else {
+        const targetListId = document.getElementById('scanTargetListSelect').value;
+        targetList = appState.lists.find(l => l.id === targetListId) || getActiveList();
+
+        if (targetList) {
+          if (!Array.isArray(targetList.items)) targetList.items = [];
+
+          if (isReceipt) {
+            let reconciledCount = 0;
+            convertedItems.forEach(ticketItem => {
+              const cleanTicketName = ticketItem.name.toLowerCase().trim();
+              const existingMatch = targetList.items.find(it => {
+                const cleanExisting = it.name.toLowerCase().trim();
+                return cleanExisting.includes(cleanTicketName) || cleanTicketName.includes(cleanExisting);
+              });
+
+              if (existingMatch) {
+                existingMatch.checked = true;
+                if (ticketItem.price) existingMatch.price = ticketItem.price;
+                existingMatch.comprado_por = activeMember;
+                reconciledCount++;
+              } else {
+                targetList.items.push(ticketItem);
+              }
+            });
+            showToast(`Boleta conciliada: ${reconciledCount} items actualizados`, "fa-check-double");
+          } else {
+            targetList.items.push(...convertedItems);
+            showToast(`Se anexaron ${convertedItems.length} productos a "${targetList.title}"`, "fa-plus-circle");
+          }
+          appState.activeListId = targetList.id;
+        }
+      }
+
+      playDingSound();
+      
+      // Guardado local inmediato garantizado
+      saveAppState(false);
+      renderApp();
+      closeScanModal();
+
+      // Guardado atómico inmediato en Supabase (sin esperar timeout)
+      if (targetList && supabaseClient && isSupabaseOnline) {
+        await uploadSingleListToSupabase(targetList);
+      }
+    }
+
+    // ========================================================
+    // REGISTRO DE SERVICE WORKER & PWA INSTALL PROMPT
+    // ========================================================
+    let deferredInstallPrompt = null;
+
+    function registerServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+            .catch(err => console.warn('Error registrando Service Worker:', err));
+        });
+      }
+
+      // Capturar evento de instalación de Android / Chrome
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        const banner = document.getElementById('pwaInstallBanner');
+        if (banner) banner.classList.remove('hidden');
+      });
+
+      window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        const banner = document.getElementById('pwaInstallBanner');
+        if (banner) banner.classList.add('hidden');
+        showToast("¡App instalada en tu Android!", "fa-mobile-screen-button");
+      });
+    }
+
+    function triggerPWAInstall() {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          showToast("Instalando aplicación...", "fa-download");
+        }
+        deferredInstallPrompt = null;
+        dismissPWAInstallBanner();
+      });
+    }
+
+    function dismissPWAInstallBanner() {
+      const banner = document.getElementById('pwaInstallBanner');
+      if (banner) banner.classList.add('hidden');
+    }
+
+    // Inicialización del DOM
+    window.addEventListener('DOMContentLoaded', () => {
+      loadPartnersConfig();
+      loadAppState();
+      loadAIConfig();
+      renderApp();
+      initSupabase();
+      registerServiceWorker();
+
+      window.addEventListener('online', async () => {
+        showToast("Conexión restablecida", "fa-wifi");
+        if (supabaseClient) {
+          const online = await testSupabaseConnection(false);
+          if (online) {
+            await syncFromSupabase(false);
+            triggerBackgroundSync();
+          }
+        }
+      });
+
+      window.addEventListener('offline', () => {
+        updateCloudStatusBadge('disconnected');
+      });
+    });
+  </script>
+</body>
+</html>
