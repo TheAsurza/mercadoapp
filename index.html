@@ -2565,7 +2565,7 @@
               qty: it.cantidad_str || `${it.cantidad_num || 1} ${it.unidad || 'unid'}`,
               category: it.categoria || 'Otros',
               checked: !!it.tachado,
-              price: it.precio ? Number(it.precio) : null,
+              price: it.price ? Number(it.price) : null,
               creado_por: it.creado_por || partnersConfig.p1.name,
               comprado_por: it.comprado_por || null
             }))
@@ -3503,8 +3503,17 @@ Devuelve estrictamente un arreglo JSON de objetos con estos campos.`;
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+            .then(reg => {
+              console.log('Service Worker registrado:', reg.scope);
+              // Forzar comprobación de versión nueva al abrir la aplicación
+              reg.update();
+            })
             .catch(err => console.warn('Error registrando Service Worker:', err));
+        });
+
+        // Si se instala un nuevo Service Worker, recargar automáticamente para aplicar cambios
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          window.location.reload();
         });
       }
 
