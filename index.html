@@ -61,7 +61,7 @@
 
 <body class="h-full text-slate-800 antialiased flex flex-col select-none overflow-hidden bg-slate-100">
 
-  <!-- BANNER PROMPT DE INSTALACIÓN ANDROID PWA (Aparece si la app no está instalada aún) -->
+  <!-- BANNER PROMPT DE INSTALACIÓN ANDROID PWA -->
   <aside id="pwaInstallBanner" class="hidden bg-slate-900 text-white px-4 py-2 text-xs flex items-center justify-between shrink-0 z-30 shadow-md">
     <div class="flex items-center gap-2">
       <div class="w-6 h-6 rounded-lg bg-brand-600 flex items-center justify-center text-white text-[11px]">
@@ -122,13 +122,13 @@
           </span>
         </button>
 
-        <!-- Change Date of Current List -->
+        <!-- Edit Active List (Title and Date) -->
         <button 
           type="button"
-          onclick="openChangeDateModal()" 
-          title="Cambiar fecha de compra"
+          onclick="openEditListInfoModal()" 
+          title="Modificar nombre y fecha de la lista"
           class="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center text-xs transition">
-          <i class="fa-regular fa-calendar-days"></i>
+          <i class="fa-solid fa-pen-to-square"></i>
         </button>
 
         <!-- Reports & Statistics -->
@@ -226,13 +226,7 @@
         <i class="fa-solid fa-clipboard-check text-xl"></i>
       </div>
       <p class="text-sm font-bold text-slate-700">No hay productos en esta vista</p>
-      <p class="text-xs text-slate-400 mt-1 max-w-[220px] mx-auto">Agrega nuevos productos o limpia el filtro de búsqueda.</p>
-      <button 
-        type="button" 
-        onclick="restoreDefaultSeedData()" 
-        class="mt-3 px-3 py-1.5 rounded-xl bg-brand-50 border border-brand-200 text-brand-700 font-bold text-xs hover:bg-brand-100 transition inline-flex items-center gap-1.5">
-        <i class="fa-solid fa-rotate-left"></i> Cargar Lista Original del Cuaderno
-      </button>
+      <p class="text-xs text-slate-400 mt-1 max-w-[240px] mx-auto">Agrega nuevos productos con el botón inferior o limpia el filtro de búsqueda.</p>
     </div>
   </main>
 
@@ -543,7 +537,7 @@
             <label class="block text-xs font-bold text-slate-700 mb-1">Cantidad *</label>
             <input 
               type="number" 
-              step="any"
+              step="any" 
               min="0.01" 
               id="newItemQuantityNum" 
               value="1" 
@@ -824,7 +818,7 @@
     </div>
   </div>
 
-  <!-- MODAL: REPORTES Y ESTADÍSTICAS -->
+  <!-- MODAL: REPORTES Y ESTADÍSTICAS (Con Rango de Fechas Personalizado) -->
   <div id="reportsModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -839,12 +833,33 @@
         </button>
       </div>
 
-      <div class="flex gap-1.5 flex-wrap">
-        <button type="button" onclick="setReportPeriod('week')" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-brand-50 border border-brand-200 text-brand-800">Esta Semana</button>
-        <button type="button" onclick="setReportPeriod('month')" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-700">Este Mes</button>
-        <button type="button" onclick="setReportPeriod('3months')" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-700">3 Meses</button>
-        <button type="button" onclick="setReportPeriod('6months')" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-700">6 Meses</button>
-        <button type="button" onclick="setReportPeriod('all')" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-700">Todo</button>
+      <!-- Selector de Periodos con opción Personalizada -->
+      <div class="space-y-2">
+        <div class="flex gap-1.5 flex-wrap">
+          <button type="button" onclick="setReportPeriod('week', event)" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-700">Esta Semana</button>
+          <button type="button" onclick="setReportPeriod('month', event)" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-brand-50 border border-brand-200 text-brand-800">Este Mes</button>
+          <button type="button" onclick="setReportPeriod('3months', event)" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-700">3 Meses</button>
+          <button type="button" onclick="setReportPeriod('6months', event)" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-700">6 Meses</button>
+          <button type="button" onclick="setReportPeriod('custom', event)" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-700 flex items-center gap-1">
+            <i class="fa-regular fa-calendar-days text-[10px]"></i> Rango Específico
+          </button>
+          <button type="button" onclick="setReportPeriod('all', event)" class="report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-700">Todo</button>
+        </div>
+
+        <!-- Rango de Fechas Personalizado (Desde / Hasta) -->
+        <div id="reportCustomDateContainer" class="hidden p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+          <span class="text-[11px] font-bold text-slate-700 block">Filtrar por rango exacto de fechas:</span>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <label class="text-[10px] text-slate-500 font-bold block mb-0.5">Desde:</label>
+              <input type="date" id="reportDateFrom" onchange="calculateAndRenderReports()" class="w-full px-2 py-1.5 rounded-lg border bg-white font-semibold">
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-500 font-bold block mb-0.5">Hasta:</label>
+              <input type="date" id="reportDateTo" onchange="calculateAndRenderReports()" class="w-full px-2 py-1.5 rounded-lg border bg-white font-semibold">
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="reportSummaryGrid" class="grid grid-cols-3 gap-2"></div>
@@ -873,7 +888,7 @@
     </div>
   </div>
 
-  <!-- MODAL: GESTIÓN DE MIS LISTAS -->
+  <!-- MODAL: GESTIÓN DE MIS LISTAS (Con filtro de fecha exacta y edición) -->
   <div id="listsModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -893,14 +908,39 @@
         <span>Crear Nueva Lista Independiente</span>
       </button>
 
-      <div class="space-y-1.5">
+      <!-- Buscador y Filtros por Fechas -->
+      <div class="space-y-2">
         <input 
           type="text" 
           id="listSearchInput" 
           oninput="renderListsCards()" 
           placeholder="Filtrar por nombre, mes o ingrediente..." 
           class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none">
+
+        <!-- Selector de Fecha Exacta -->
+        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2 text-xs">
+          <div class="flex items-center gap-1.5 text-slate-600 font-semibold shrink-0">
+            <i class="fa-regular fa-calendar-check text-brand-600"></i>
+            <span class="text-[11px]">Fecha específica:</span>
+          </div>
+          <div class="flex items-center gap-1 flex-1 justify-end">
+            <input 
+              type="date" 
+              id="listSpecificDateInput" 
+              onchange="onSpecificDateChange()" 
+              class="px-2 py-1 text-xs rounded-lg border bg-white font-bold text-slate-800">
+            <button 
+              type="button" 
+              id="clearSpecificDateBtn"
+              onclick="clearSpecificDateFilter()" 
+              title="Quitar filtro de fecha exacta"
+              class="hidden w-6 h-6 rounded-lg text-slate-400 hover:text-rose-600 flex items-center justify-center transition">
+              <i class="fa-solid fa-xmark text-xs"></i>
+            </button>
+          </div>
+        </div>
         
+        <!-- Píldoras de rango rápido -->
         <div class="flex gap-1 overflow-x-auto no-scrollbar text-[11px]">
           <button type="button" onclick="setListTimeFilter('all')" class="list-time-btn px-2 py-0.5 rounded-lg bg-brand-100 text-brand-800 font-bold">Todas</button>
           <button type="button" onclick="setListTimeFilter('month')" class="list-time-btn px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">Este mes</button>
@@ -910,6 +950,44 @@
       </div>
 
       <div id="listsCardsRoot" class="space-y-2 max-h-72 overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR INFORMACIÓN DE LISTA (Nombre y Fecha) -->
+  <div id="editListInfoModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center p-4">
+    <div class="w-full max-w-xs bg-white rounded-2xl shadow-2xl p-5 space-y-4">
+      <div class="text-center">
+        <div class="w-12 h-12 mx-auto mb-2 rounded-2xl bg-brand-50 border border-brand-200 text-brand-600 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </div>
+        <h3 class="text-sm font-extrabold text-slate-900" id="editListModalHeading">Modificar Lista</h3>
+        <p class="text-xs text-slate-500">Actualiza el nombre y fecha de la compra</p>
+      </div>
+
+      <input type="hidden" id="editListTargetId">
+
+      <div class="space-y-2.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nombre de la lista</label>
+          <input 
+            type="text" 
+            id="editListTitleInput" 
+            placeholder="Ej: Mercado Semanal, Wong, etc." 
+            class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 font-semibold focus:outline-none focus:border-brand-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Fecha de compra</label>
+          <input 
+            type="date" 
+            id="editListDateInput" 
+            class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-800 text-center">
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-1">
+        <button type="button" onclick="closeEditListInfoModal()" class="flex-1 py-2 rounded-xl border text-slate-600 font-bold text-xs hover:bg-slate-50">Cancelar</button>
+        <button type="button" onclick="confirmEditListInfo()" class="flex-1 py-2 rounded-xl bg-brand-600 text-white font-bold text-xs hover:bg-brand-700 shadow-sm">Guardar Cambios</button>
+      </div>
     </div>
   </div>
 
@@ -966,24 +1044,6 @@
             <input type="file" id="backupFileInput" accept=".json" class="hidden" onchange="importLocalBackupFile(event)">
           </label>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: CAMBIAR FECHA DE LISTA ACTIVA -->
-  <div id="changeDateModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center p-4">
-    <div class="w-full max-w-xs bg-white rounded-2xl shadow-2xl p-5 space-y-4">
-      <div class="text-center">
-        <div class="w-12 h-12 mx-auto mb-2 rounded-2xl bg-brand-50 border border-brand-200 text-brand-600 flex items-center justify-center text-lg">
-          <i class="fa-regular fa-calendar-days"></i>
-        </div>
-        <h3 class="text-sm font-extrabold text-slate-900">Fecha de Compra</h3>
-        <p class="text-xs text-slate-500">Modifica el día asignado a esta lista</p>
-      </div>
-      <input type="date" id="changeDateInput" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-800 text-center">
-      <div class="flex gap-2">
-        <button type="button" onclick="closeChangeDateModal()" class="flex-1 py-2 rounded-xl border text-slate-600 font-bold text-xs">Cancelar</button>
-        <button type="button" onclick="confirmChangeDate()" class="flex-1 py-2 rounded-xl bg-brand-600 text-white font-bold text-xs">Guardar</button>
       </div>
     </div>
   </div>
@@ -1090,7 +1150,7 @@
     </div>
   </div>
 
-  <!-- MODAL CONFIRMACIÓN TÁCTIL (Elimina bloqueos de sandbox) -->
+  <!-- MODAL CONFIRMACIÓN TÁCTIL -->
   <div id="confirmDialogModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center p-4">
     <div class="w-full max-w-xs bg-white rounded-2xl shadow-2xl p-5 space-y-3 animate-scale text-center">
       <div id="confirmDialogIcon" class="w-12 h-12 mx-auto rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center text-lg">
@@ -1124,7 +1184,6 @@
     const PARTNERS_KEY = 'mercado_partners_cfg';
     const AI_CONFIG_KEY = 'mercado_ai_config_v1';
 
-    // Backend Supabase ya configurado para persistencia directa
     const DEFAULT_SUPABASE_URL = 'https://hopyxdmkghmbxzhqmqcu.supabase.co';
     const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvcHl4ZG1rZ2htYnh6aHFtcWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NDE4NTIsImV4cCI6MjEwNjIxNzg1Mn0.7AI5JHBpSaI5NS-HIIJ4BYau0ktsVFmi72F1i5eIY4Y';
 
@@ -1173,11 +1232,12 @@
     let searchQuery = '';
     let supabaseClient = null;
     let isSupabaseOnline = false;
-    let isPerformingLocalPush = false; // Bandera para evitar que nuestro propio push dispare un fetch destructivo
+    let isPerformingLocalPush = false;
     let priceChartInstance = null;
     let itemPendingPrice = null;
     let promptSelectedBuyer = null;
     let activeListTimeFilter = 'all';
+    let specificDateFilter = '';
     let currentReportPeriod = 'month';
     let realtimeChannel = null;
 
@@ -1187,58 +1247,21 @@
     let pendingScanBase64 = null;
     let scanSelectedBuyer = null;
 
-    // Semilla predeterminada con los productos del cuaderno
-    function getDefaultSeedData() {
+    function getDefaultEmptyState() {
       const today = getTodayYMD();
-      const p1 = partnersConfig.p1.name;
-      const p2 = partnersConfig.p2.name;
-
-      const notebookItems = [
-        { id: generateUUID(), name: "Milanesas", qty: "4 unid", category: "Carnes y Aves", checked: false, price: null, creado_por: p1, comprado_por: null },
-        { id: generateUUID(), name: "Carne para guiso", qty: "0.5 kg", category: "Carnes y Aves", checked: false, price: null, creado_por: p1, comprado_por: null },
-        { id: generateUUID(), name: "Medallones de pavita", qty: "4 unid", category: "Carnes y Aves", checked: false, price: null, creado_por: p2, comprado_por: null },
-        { id: generateUUID(), name: "Chuletas", qty: "4 unid", category: "Carnes y Aves", checked: false, price: null, creado_por: p1, comprado_por: null },
-        { id: generateUUID(), name: "Pechuga de pollo", qty: "1 unid", category: "Carnes y Aves", checked: false, price: null, creado_por: p1, comprado_por: null },
-        { id: generateUUID(), name: "Papa para freír", qty: "1 kg", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p1, comprado_por: null },
-        { id: generateUUID(), name: "Tomate", qty: "1 kg", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p2, comprado_por: null },
-        { id: generateUUID(), name: "Cebolla", qty: "1 kg", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p2, comprado_por: null },
-        { id: generateUUID(), name: "Lechuga", qty: "1 unid", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p1, comprado_por: null },
-        { id: generateUUID(), name: "Papa blanca", qty: "1 kg", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p1, comprado_por: null },
-        { id: generateUUID(), name: "Alverjita", qty: "0.5 kg", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p2, comprado_por: null },
-        { id: generateUUID(), name: "Kion", qty: "0.25 kg", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p1, comprado_por: null },
-        { id: generateUUID(), name: "Cebolla China", qty: "1 atado", category: "Verduras y Tubérculos", checked: false, price: null, creado_por: p1, comprado_por: null },
-        { id: generateUUID(), name: "Fresas", qty: "1 kg", category: "Frutas", checked: false, price: null, creado_por: p2, comprado_por: null },
-        { id: generateUUID(), name: "Arándanos", qty: "0.25 kg", category: "Frutas", checked: false, price: null, creado_por: p2, comprado_por: null },
-        { id: generateUUID(), name: "Carambola", qty: "0.5 kg", category: "Frutas", checked: false, price: null, creado_por: p1, comprado_por: null },
-        { id: generateUUID(), name: "Pasta de ají amarillo", qty: "1 frasco", category: "Especias y Condimentos", checked: false, price: null, creado_por: p2, comprado_por: null },
-        { id: generateUUID(), name: "Ajinomoto", qty: "1 sobre", category: "Especias y Condimentos", checked: false, price: null, creado_por: p1, comprado_por: null },
-        { id: generateUUID(), name: "Ajo", qty: "0.25 kg", category: "Especias y Condimentos", checked: false, price: null, creado_por: p1, comprado_por: null },
-        { id: generateUUID(), name: "Ajonjolí", qty: "1 sobre", category: "Especias y Condimentos", checked: false, price: null, creado_por: p2, comprado_por: null },
-        { id: generateUUID(), name: "Escoba", qty: "1 unid", category: "Hogar y Limpieza", checked: false, price: null, creado_por: p1, comprado_por: null },
-        { id: generateUUID(), name: "Recogedor", qty: "1 unid", category: "Hogar y Limpieza", checked: false, price: null, creado_por: p1, comprado_por: null },
-        { id: generateUUID(), name: "Frascos especería", qty: "3 unid", category: "Hogar y Limpieza", checked: false, price: null, creado_por: p2, comprado_por: null }
-      ];
-
-      const currentListId = generateUUID();
+      const listId = generateUUID();
       return {
-        activeListId: currentListId,
+        activeListId: listId,
         lists: [
           {
-            id: currentListId,
-            title: "Mercado Principal (Cuaderno)",
+            id: listId,
+            title: "Mercado " + today,
             date: today,
-            creado_por: p1,
-            items: notebookItems
+            creado_por: partnersConfig.p1.name,
+            items: []
           }
         ]
       };
-    }
-
-    function restoreDefaultSeedData() {
-      appState = getDefaultSeedData();
-      saveAppState(true);
-      renderApp();
-      showToast("Lista del cuaderno restablecida", "fa-check");
     }
 
     function loadPartnersConfig() {
@@ -1350,7 +1373,6 @@
       } catch (e) {}
     }
 
-    // Carga local protegida (0ms de latencia)
     function loadAppState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -1376,7 +1398,7 @@
       } catch (err) {
         console.warn("Error cargando estado local:", err);
       }
-      appState = getDefaultSeedData();
+      appState = getDefaultEmptyState();
     }
 
     function saveAppState(triggerSync = true) {
@@ -1388,7 +1410,7 @@
 
     function getActiveList() {
       if (!appState.lists || appState.lists.length === 0) {
-        appState = getDefaultSeedData();
+        appState = getDefaultEmptyState();
       }
       let found = appState.lists.find(l => l.id === appState.activeListId);
       if (!found) {
@@ -1823,6 +1845,7 @@
       });
     }
 
+    // GESTOR DE LISTAS
     function openListsModal() {
       renderListsCards();
       document.getElementById('listsModal').classList.remove('hidden');
@@ -1834,6 +1857,12 @@
 
     function setListTimeFilter(range) {
       activeListTimeFilter = range;
+      specificDateFilter = '';
+      const dateInput = document.getElementById('listSpecificDateInput');
+      if (dateInput) dateInput.value = '';
+      const clearBtn = document.getElementById('clearSpecificDateBtn');
+      if (clearBtn) clearBtn.classList.add('hidden');
+
       document.querySelectorAll('.list-time-btn').forEach(btn => {
         btn.className = 'list-time-btn px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600';
       });
@@ -1841,11 +1870,33 @@
       renderListsCards();
     }
 
+    function onSpecificDateChange() {
+      const val = document.getElementById('listSpecificDateInput').value;
+      specificDateFilter = val || '';
+      const clearBtn = document.getElementById('clearSpecificDateBtn');
+      if (val) {
+        clearBtn.classList.remove('hidden');
+        document.querySelectorAll('.list-time-btn').forEach(btn => {
+          btn.className = 'list-time-btn px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600';
+        });
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+      renderListsCards();
+    }
+
+    function clearSpecificDateFilter() {
+      document.getElementById('listSpecificDateInput').value = '';
+      specificDateFilter = '';
+      document.getElementById('clearSpecificDateBtn').classList.add('hidden');
+      setListTimeFilter('all');
+    }
+
     function renderListsCards() {
       const root = document.getElementById('listsCardsRoot');
       root.innerHTML = '';
 
-      const query = (document.getElementById('listSearchInput').value || '').toLowerCase().trim();
+      const query = (document.getElementById('listSearchInput')?.value || '').toLowerCase().trim();
       const now = new Date();
 
       let filtered = [...appState.lists].filter(list => {
@@ -1855,6 +1906,12 @@
           (list.items && list.items.some(i => i.name.toLowerCase().includes(query)));
 
         if (!matchesQuery) return false;
+
+        // Filtro por fecha específica si está seleccionada
+        if (specificDateFilter) {
+          return list.date === specificDateFilter;
+        }
+
         if (activeListTimeFilter === 'all') return true;
         const listDate = new Date(list.date || getTodayYMD());
         const diffDays = (now - listDate) / (1000 * 60 * 60 * 24);
@@ -1865,11 +1922,10 @@
         return true;
       });
 
-      // Ordenar por fecha cronológica descendente (más recientes arriba)
       filtered.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
       if (filtered.length === 0) {
-        root.innerHTML = `<div class="py-6 text-center text-xs text-slate-400">No hay listas en este periodo</div>`;
+        root.innerHTML = `<div class="py-6 text-center text-xs text-slate-400">No hay listas para este criterio de búsqueda o fecha</div>`;
         return;
       }
 
@@ -1892,7 +1948,7 @@
               ${isActive ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-brand-600 text-white">Activa</span>' : ''}
             </div>
             <div class="flex items-center gap-3 mt-1 text-[11px] text-slate-500">
-              <span class="flex items-center gap-1">
+              <span class="flex items-center gap-1 font-semibold text-slate-600">
                 <i class="fa-regular fa-calendar text-[10px]"></i> ${list.date || getTodayYMD()}
               </span>
               <span>•</span>
@@ -1903,9 +1959,18 @@
           </div>
 
           <div class="flex items-center gap-1 shrink-0 ml-2">
+            <!-- Edit List Title/Date button -->
+            <button 
+              type="button" 
+              onclick="openEditListFromCard('${list.id}', event)" 
+              title="Modificar nombre o fecha"
+              class="w-7 h-7 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 flex items-center justify-center transition">
+              <i class="fa-solid fa-pen text-xs"></i>
+            </button>
             <button 
               type="button" 
               onclick="deleteListPrompt('${list.id}', event)" 
+              title="Eliminar lista"
               class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition">
               <i class="fa-solid fa-trash-can text-xs"></i>
             </button>
@@ -1981,36 +2046,66 @@
       closeListsModal();
       showToast("Nueva lista creada", "fa-circle-check");
 
-      // Guardar de inmediato en Supabase
       if (supabaseClient && isSupabaseOnline) {
         await uploadSingleListToSupabase(newList);
       }
     }
 
-    function openChangeDateModal() {
+    // MODAL DE MODIFICACIÓN DE NOMBRE Y FECHA DE LISTA
+    function openEditListInfoModal() {
       const activeList = getActiveList();
       if (!activeList) return;
-      document.getElementById('changeDateInput').value = activeList.date || getTodayYMD();
-      document.getElementById('changeDateModal').classList.remove('hidden');
+      openEditListWithId(activeList.id);
     }
 
-    function closeChangeDateModal() {
-      document.getElementById('changeDateModal').classList.add('hidden');
+    function openEditListFromCard(listId, e) {
+      if (e) e.stopPropagation();
+      openEditListWithId(listId);
     }
 
-    function confirmChangeDate() {
-      const activeList = getActiveList();
-      if (!activeList) return;
-      const newDate = document.getElementById('changeDateInput').value;
-      if (newDate) {
-        activeList.date = newDate;
-        saveAppState();
-        renderApp();
-        closeChangeDateModal();
-        showToast("Fecha actualizada", "fa-calendar-check");
+    function openEditListWithId(listId) {
+      const target = appState.lists.find(l => l.id === listId);
+      if (!target) return;
+
+      document.getElementById('editListTargetId').value = target.id;
+      document.getElementById('editListTitleInput').value = target.title || '';
+      document.getElementById('editListDateInput').value = target.date || getTodayYMD();
+      document.getElementById('editListInfoModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('editListTitleInput').focus(), 100);
+    }
+
+    function closeEditListInfoModal() {
+      document.getElementById('editListInfoModal').classList.add('hidden');
+    }
+
+    async function confirmEditListInfo() {
+      const targetId = document.getElementById('editListTargetId').value;
+      const target = appState.lists.find(l => l.id === targetId);
+      if (!target) return;
+
+      const newTitle = document.getElementById('editListTitleInput').value.trim();
+      const newDate = document.getElementById('editListDateInput').value;
+
+      if (!newTitle) {
+        showToast("Por favor ingresa un nombre para la lista", "fa-triangle-exclamation");
+        return;
+      }
+
+      target.title = newTitle;
+      if (newDate) target.date = newDate;
+
+      saveAppState(false);
+      renderApp();
+      renderListsCards();
+      closeEditListInfoModal();
+      showToast("Lista actualizada correctamente", "fa-circle-check");
+
+      if (supabaseClient && isSupabaseOnline) {
+        await uploadSingleListToSupabase(target);
       }
     }
 
+    // REPORTES Y ESTADÍSTICAS
     function openReportsModal() {
       setReportPeriod('month');
       document.getElementById('reportsModal').classList.remove('hidden');
@@ -2025,18 +2120,46 @@
       document.querySelectorAll('.report-btn').forEach(btn => {
         btn.className = 'report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 border border-slate-200 text-slate-700';
       });
-      const activeBtn = evt ? evt.target : document.querySelector('.report-btn');
+
+      const activeBtn = evt ? evt.currentTarget : document.querySelector(`.report-btn:nth-child(${period === 'month' ? 2 : 1})`);
       if (activeBtn) {
         activeBtn.className = 'report-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-brand-50 border border-brand-200 text-brand-800';
       }
+
+      const customContainer = document.getElementById('reportCustomDateContainer');
+      if (period === 'custom') {
+        customContainer.classList.remove('hidden');
+        if (!document.getElementById('reportDateFrom').value) {
+          const past = new Date();
+          past.setDate(past.getDate() - 30);
+          document.getElementById('reportDateFrom').value = past.toISOString().split('T')[0];
+        }
+        if (!document.getElementById('reportDateTo').value) {
+          document.getElementById('reportDateTo').value = getTodayYMD();
+        }
+      } else {
+        customContainer.classList.add('hidden');
+      }
+
       calculateAndRenderReports();
     }
 
     function calculateAndRenderReports() {
       const now = new Date();
+      const customFrom = document.getElementById('reportDateFrom')?.value;
+      const customTo = document.getElementById('reportDateTo')?.value;
+
       const filteredLists = appState.lists.filter(l => {
+        const lDateStr = l.date || getTodayYMD();
+
+        if (currentReportPeriod === 'custom') {
+          if (customFrom && lDateStr < customFrom) return false;
+          if (customTo && lDateStr > customTo) return false;
+          return true;
+        }
+
         if (currentReportPeriod === 'all') return true;
-        const lDate = new Date(l.date || getTodayYMD());
+        const lDate = new Date(lDateStr);
         const diffDays = (now - lDate) / (1000 * 60 * 60 * 24);
         if (currentReportPeriod === 'week') return diffDays <= 7;
         if (currentReportPeriod === 'month') return diffDays <= 30;
@@ -2177,6 +2300,7 @@
       }
     }
 
+    // HISTÓRICO Y TENDENCIA DE PRECIOS
     function openPriceHistoryModal() {
       buildProductSelectOptions();
       document.getElementById('priceHistoryModal').classList.remove('hidden');
@@ -2333,9 +2457,7 @@
       });
     }
 
-    // ========================================================
-    // MOTOR DE SINCRONIZACIÓN SUPABASE (LOCAL-FIRST TWO-WAY)
-    // ========================================================
+    // SUPABASE & SYNC
     let syncTimeout = null;
     let isSyncingInBackground = false;
     let realtimeDebounceTimer = null;
@@ -2359,7 +2481,6 @@
           testSupabaseConnection(false).then(async (online) => {
             if (online) {
               setupRealtimeSubscription();
-              // CRUCIAL: Traer las listas de Supabase inmediatamente al iniciar
               await syncFromSupabase(false);
             }
           });
@@ -2389,14 +2510,12 @@
       }
     }
 
-    // DESCARGA Y RECONCILIACIÓN BIDIRECCIONAL COMPLETA
     async function syncFromSupabase(notify = false) {
       if (!supabaseClient || isPerformingLocalPush) return;
 
       try {
         updateCloudStatusBadge('syncing');
 
-        // Traer listas ordenadas con sus items anidados mediante foreign key
         let remoteLists = [];
         const { data: joinData, error: joinErr } = await supabaseClient
           .from('listas')
@@ -2424,7 +2543,6 @@
         if (!joinErr && joinData && joinData.length > 0) {
           remoteLists = joinData;
         } else {
-          // Consulta de respaldo si la relación anidada no estuviera cacheada
           const { data: lData } = await supabaseClient.from('listas').select('*').order('fecha', { ascending: false });
           const { data: iData } = await supabaseClient.from('items').select('*');
           if (lData && lData.length > 0) {
@@ -2453,13 +2571,11 @@
             }))
           }));
 
-          // Reconciliar: no eliminar listas locales que estén pendientes de subir
           const remoteIds = new Set(reconstructedLists.map(l => l.id));
           const localOnlyLists = appState.lists.filter(l => !remoteIds.has(l.id));
 
           appState.lists = [...reconstructedLists, ...localOnlyLists];
 
-          // Mantener la lista activa actual si existe; si no, activar la primera (más reciente)
           if (!appState.activeListId || !appState.lists.some(l => l.id === appState.activeListId)) {
             appState.activeListId = appState.lists[0].id;
           }
@@ -2469,7 +2585,6 @@
           updateCloudStatusBadge('connected');
           if (notify) showToast("Listas sincronizadas con la nube", "fa-cloud-arrow-down");
         } else if (appState.lists && appState.lists.length > 0) {
-          // Si Supabase estuviera vacío pero tenemos datos locales, subirlos
           triggerBackgroundSync();
         }
       } catch (e) {
@@ -2525,7 +2640,6 @@
       }
     }
 
-    // Subida atómica de una sola lista (garantiza que al escanear quede guardada al 100%)
     async function uploadSingleListToSupabase(list) {
       if (!supabaseClient || !isSupabaseOnline) return;
 
@@ -2612,7 +2726,7 @@
     function exportLocalBackupFile() {
       try {
         const payload = {
-          version: '3.6-hogar',
+          version: '3.7-hogar',
           exportedAt: new Date().toISOString(),
           partnersConfig: partnersConfig,
           appState: appState
@@ -2768,9 +2882,7 @@
       renderApp();
     }
 
-    // ========================================================
-    // MODAL DE ESCANEO DE LISTAS Y BOLETAS (IA)
-    // ========================================================
+    // IA & ESCÁNER
     function loadAIConfig() {
       try {
         const raw = localStorage.getItem(AI_CONFIG_KEY);
@@ -3238,7 +3350,7 @@ Devuelve estrictamente un arreglo JSON de objetos con estos campos.`;
               <span class="text-[10px] text-slate-400">Cant:</span>
               <input 
                 type="number" 
-                step="any"
+                step="any" 
                 min="0.01" 
                 value="${item.cantidad_num}" 
                 onchange="updateScannedItemField(${index}, 'cantidad_num', parseFloat(this.value))"
@@ -3299,7 +3411,6 @@ Devuelve estrictamente un arreglo JSON de objetos con estos campos.`;
       document.getElementById('scanAppendFields').classList.toggle('hidden', isNew);
     }
 
-    // APLICAR PRODUCTOS ESCANEADOS (Con guardado inmediato y atómico)
     async function applyScannedItemsToApp() {
       const selected = detectedScannedItems.filter(i => i.selected && i.name.trim().length > 0);
       if (selected.length === 0) {
@@ -3376,20 +3487,16 @@ Devuelve estrictamente un arreglo JSON de objetos con estos campos.`;
 
       playDingSound();
       
-      // Guardado local inmediato garantizado
       saveAppState(false);
       renderApp();
       closeScanModal();
 
-      // Guardado atómico inmediato en Supabase (sin esperar timeout)
       if (targetList && supabaseClient && isSupabaseOnline) {
         await uploadSingleListToSupabase(targetList);
       }
     }
 
-    // ========================================================
-    // REGISTRO DE SERVICE WORKER & PWA INSTALL PROMPT
-    // ========================================================
+    // SERVICE WORKER & PWA INSTALL PROMPT
     let deferredInstallPrompt = null;
 
     function registerServiceWorker() {
@@ -3401,7 +3508,6 @@ Devuelve estrictamente un arreglo JSON de objetos con estos campos.`;
         });
       }
 
-      // Capturar evento de instalación de Android / Chrome
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredInstallPrompt = e;
@@ -3434,7 +3540,6 @@ Devuelve estrictamente un arreglo JSON de objetos con estos campos.`;
       if (banner) banner.classList.add('hidden');
     }
 
-    // Inicialización del DOM
     window.addEventListener('DOMContentLoaded', () => {
       loadPartnersConfig();
       loadAppState();
